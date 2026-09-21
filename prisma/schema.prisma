@@ -1,0 +1,1116 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Atom {
+  molecule_id Int       @db.UnsignedInt
+  rack_id     Int       @db.UnsignedInt
+  unit_no     Int       @db.UnsignedInt
+  atom        Atom_atom
+  Molecule    Molecule  @relation(fields: [molecule_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "Atom-FK-molecule_id")
+  Object      Object    @relation(fields: [rack_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "Atom-FK-rack_id")
+
+  @@id([molecule_id, rack_id, unit_no, atom])
+  @@index([rack_id], map: "Atom-FK-rack_id")
+}
+
+model Attribute {
+  id           Int             @id @default(autoincrement()) @db.UnsignedInt
+  type         Attribute_type?
+  name         String?         @unique(map: "name") @db.Char(64)
+  AttributeMap AttributeMap[]
+}
+
+model AttributeMap {
+  objtype_id     Int                  @default(1) @db.UnsignedInt
+  attr_id        Int                  @default(1) @db.UnsignedInt
+  chapter_id     Int?                 @db.UnsignedInt
+  sticky         AttributeMap_sticky? @default(no)
+  Attribute      Attribute            @relation(fields: [attr_id], references: [id], onUpdate: Restrict, map: "AttributeMap-FK-attr_id")
+  Chapter        Chapter?             @relation(fields: [chapter_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "AttributeMap-FK-chapter_id")
+  AttributeValue AttributeValue[]
+
+  @@unique([objtype_id, attr_id], map: "objtype_id")
+  @@index([attr_id], map: "attr_id")
+  @@index([chapter_id], map: "chapter_id")
+}
+
+model AttributeValue {
+  object_id    Int          @db.UnsignedInt
+  object_tid   Int          @default(0) @db.UnsignedInt
+  attr_id      Int          @db.UnsignedInt
+  string_value String?      @db.Char(255)
+  uint_value   Int?         @db.UnsignedInt
+  float_value  Float?       @db.Float
+  AttributeMap AttributeMap @relation(fields: [object_tid, attr_id], references: [objtype_id, attr_id], onUpdate: Restrict, map: "AttributeValue-FK-map")
+  Object       Object       @relation(fields: [object_id, object_tid], references: [id, objtype_id], onDelete: Cascade, map: "AttributeValue-FK-object")
+
+  @@id([object_id, attr_id])
+  @@index([attr_id, string_value(length: 12)], map: "attr_id-string_value")
+  @@index([attr_id, uint_value], map: "attr_id-uint_value")
+  @@index([object_id, object_tid], map: "id-tid")
+  @@index([object_tid, attr_id], map: "object_tid-attr_id")
+}
+
+model CachedPAV {
+  object_id   Int         @db.UnsignedInt
+  port_name   String      @db.Char(255)
+  vlan_id     Int         @default(0) @db.UnsignedInt
+  CachedPVM   CachedPVM   @relation(fields: [object_id, port_name], references: [object_id, port_name], onDelete: Cascade, onUpdate: Restrict, map: "CachedPAV-FK-object-port")
+  VLANValidID VLANValidID @relation(fields: [vlan_id], references: [vlan_id], onUpdate: Restrict, map: "CachedPAV-FK-vlan_id")
+  CachedPNV   CachedPNV?
+
+  @@id([object_id, port_name, vlan_id])
+  @@index([vlan_id], map: "vlan_id")
+}
+
+model CachedPNV {
+  object_id Int       @db.UnsignedInt
+  port_name String    @db.Char(255)
+  vlan_id   Int       @default(0) @db.UnsignedInt
+  CachedPAV CachedPAV @relation(fields: [object_id, port_name, vlan_id], references: [object_id, port_name, vlan_id], onDelete: Cascade, onUpdate: Restrict, map: "CachedPNV-FK-compound")
+
+  @@id([object_id, port_name, vlan_id])
+  @@unique([object_id, port_name], map: "port_id")
+}
+
+model CachedPVM {
+  object_id    Int                 @db.UnsignedInt
+  port_name    String              @db.Char(255)
+  vlan_mode    CachedPVM_vlan_mode @default(access)
+  CachedPAV    CachedPAV[]
+  Object       Object              @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "CachedPVM-FK-object_id")
+  PortVLANMode PortVLANMode?
+
+  @@id([object_id, port_name])
+}
+
+model Chapter {
+  id           Int             @id @default(autoincrement()) @db.UnsignedInt
+  sticky       Chapter_sticky? @default(no)
+  name         String          @unique(map: "name") @db.Char(128)
+  AttributeMap AttributeMap[]
+  Dictionary   Dictionary[]
+}
+
+model Config {
+  varname        String                @id @db.Char(32)
+  varvalue       String                @db.Text
+  vartype        Config_vartype        @default(string)
+  emptyok        Config_emptyok        @default(no)
+  is_hidden      Config_is_hidden      @default(yes)
+  is_userdefined Config_is_userdefined @default(no)
+  description    String?               @db.Text
+  UserConfig     UserConfig[]
+}
+
+model Dictionary {
+  chapter_id  Int                     @db.UnsignedInt
+  dict_key    Int                     @id @default(autoincrement()) @db.UnsignedInt
+  dict_sticky Dictionary_dict_sticky? @default(no)
+  dict_value  String?                 @db.Char(255)
+  Chapter     Chapter                 @relation(fields: [chapter_id], references: [id], onUpdate: Restrict, map: "Dictionary-FK-chapter_id")
+
+  @@unique([chapter_id, dict_value, dict_sticky], map: "dict_unique")
+}
+
+model EntityLink {
+  id                 Int                           @id @default(autoincrement()) @db.UnsignedInt
+  parent_entity_type EntityLink_parent_entity_type
+  parent_entity_id   Int                           @db.UnsignedInt
+  child_entity_type  EntityLink_child_entity_type
+  child_entity_id    Int                           @db.UnsignedInt
+
+  @@unique([parent_entity_type, parent_entity_id, child_entity_type, child_entity_id], map: "EntityLink-unique")
+  @@index([parent_entity_type, child_entity_type, child_entity_id], map: "EntityLink-compound")
+}
+
+model File {
+  id        Int        @id @default(autoincrement()) @db.UnsignedInt
+  name      String     @unique(map: "name") @db.Char(255)
+  type      String     @db.Char(255)
+  size      Int        @db.UnsignedInt
+  ctime     DateTime   @db.DateTime(0)
+  mtime     DateTime   @db.DateTime(0)
+  atime     DateTime   @db.DateTime(0)
+  thumbnail Bytes?
+  contents  Bytes
+  comment   String?    @db.Text
+  FileLink  FileLink[]
+}
+
+model FileLink {
+  id          Int                  @id @default(autoincrement()) @db.UnsignedInt
+  file_id     Int                  @db.UnsignedInt
+  entity_type FileLink_entity_type @default(object)
+  entity_id   Int
+  File        File                 @relation(fields: [file_id], references: [id], onDelete: Cascade, map: "FileLink-File_fkey")
+
+  @@unique([file_id, entity_type, entity_id], map: "FileLink-unique")
+  @@index([file_id], map: "FileLink-file_id")
+}
+
+model IPv4Address {
+  ip       Int                   @id @default(0) @db.UnsignedInt
+  name     String                @default("") @db.Char(255)
+  comment  String                @default("") @db.Char(255)
+  reserved IPv4Address_reserved?
+}
+
+model IPv4Allocation {
+  object_id Int                 @default(0) @db.UnsignedInt
+  ip        Int                 @default(0) @db.UnsignedInt
+  name      String              @default("") @db.Char(255)
+  type      IPv4Allocation_type @default(regular)
+  Object    Object              @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "IPv4Allocation-FK-object_id")
+
+  @@id([object_id, ip])
+  @@index([ip], map: "ip")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model IPv4LB {
+  object_id  Int?        @db.UnsignedInt
+  rspool_id  Int?        @db.UnsignedInt
+  vs_id      Int?        @db.UnsignedInt
+  prio       String?     @db.VarChar(255)
+  vsconfig   String?     @db.Text
+  rsconfig   String?     @db.Text
+  Object     Object?     @relation(fields: [object_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "IPv4LB-FK-object_id")
+  IPv4RSPool IPv4RSPool? @relation(fields: [rspool_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "IPv4LB-FK-rspool_id")
+  IPv4VS     IPv4VS?     @relation(fields: [vs_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "IPv4LB-FK-vs_id")
+
+  @@unique([object_id, vs_id], map: "LB-VS")
+  @@index([rspool_id], map: "IPv4LB-FK-rspool_id")
+  @@index([vs_id], map: "IPv4LB-FK-vs_id")
+  @@ignore
+}
+
+model IPv4Log {
+  id      Int      @id @default(autoincrement())
+  ip      Int      @db.UnsignedInt
+  date    DateTime @db.DateTime(0)
+  user    String   @db.VarChar(64)
+  message String   @db.Text
+
+  @@index([ip, date], map: "ip-date")
+}
+
+model IPv4NAT {
+  object_id   Int           @default(0) @db.UnsignedInt
+  proto       IPv4NAT_proto @default(TCP)
+  localip     Int           @default(0) @db.UnsignedInt
+  localport   Int           @default(0) @db.UnsignedSmallInt
+  remoteip    Int           @default(0) @db.UnsignedInt
+  remoteport  Int           @default(0) @db.UnsignedSmallInt
+  description String?       @db.Char(255)
+  Object      Object        @relation(fields: [object_id], references: [id], onUpdate: Restrict, map: "IPv4NAT-FK-object_id")
+
+  @@id([object_id, proto, localip, localport, remoteip, remoteport])
+  @@index([localip], map: "localip")
+  @@index([object_id], map: "object_id")
+  @@index([remoteip], map: "remoteip")
+}
+
+model IPv4Network {
+  id       Int        @id @default(autoincrement()) @db.UnsignedInt
+  ip       Int        @default(0) @db.UnsignedInt
+  mask     Int        @default(0) @db.UnsignedInt
+  name     String?    @db.Char(255)
+  comment  String?    @db.Text
+  VLANIPv4 VLANIPv4[]
+
+  @@unique([ip, mask], map: "base-len")
+}
+
+model IPv4RS {
+  id         Int              @id @default(autoincrement()) @db.UnsignedInt
+  inservice  IPv4RS_inservice @default(no)
+  rsip       Bytes            @db.VarBinary(16)
+  rsport     Int?             @db.UnsignedSmallInt
+  rspool_id  Int?             @db.UnsignedInt
+  rsconfig   String?          @db.Text
+  comment    String?          @db.VarChar(255)
+  IPv4RSPool IPv4RSPool?      @relation(fields: [rspool_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "IPv4RS-FK")
+
+  @@unique([rspool_id, rsip, rsport], map: "pool-endpoint")
+  @@index([rsip], map: "rsip")
+}
+
+model IPv4RSPool {
+  id             Int              @id @default(autoincrement()) @db.UnsignedInt
+  name           String?          @db.Char(255)
+  vsconfig       String?          @db.Text
+  rsconfig       String?          @db.Text
+  IPv4LB         IPv4LB[]         @ignore
+  IPv4RS         IPv4RS[]
+  VSEnabledIPs   VSEnabledIPs[]
+  VSEnabledPorts VSEnabledPorts[]
+}
+
+model IPv4VS {
+  id       Int          @id @default(autoincrement()) @db.UnsignedInt
+  vip      Bytes        @db.VarBinary(16)
+  vport    Int?         @db.UnsignedSmallInt
+  proto    IPv4VS_proto @default(TCP)
+  name     String?      @db.Char(255)
+  vsconfig String?      @db.Text
+  rsconfig String?      @db.Text
+  IPv4LB   IPv4LB[]     @ignore
+
+  @@index([vip], map: "vip")
+}
+
+model IPv6Address {
+  ip       Bytes                 @id @db.Binary(16)
+  name     String                @default("") @db.Char(255)
+  comment  String                @default("") @db.Char(255)
+  reserved IPv6Address_reserved?
+}
+
+model IPv6Allocation {
+  object_id Int                 @default(0) @db.UnsignedInt
+  ip        Bytes               @db.Binary(16)
+  name      String              @default("") @db.Char(255)
+  type      IPv6Allocation_type @default(regular)
+  Object    Object              @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "IPv6Allocation-FK-object_id")
+
+  @@id([object_id, ip])
+  @@index([ip], map: "ip")
+}
+
+model IPv6Log {
+  id      Int      @id @default(autoincrement())
+  ip      Bytes    @db.Binary(16)
+  date    DateTime @db.DateTime(0)
+  user    String   @db.VarChar(64)
+  message String   @db.Text
+
+  @@index([ip, date], map: "ip-date")
+}
+
+model IPv6Network {
+  id       Int        @id @default(autoincrement()) @db.UnsignedInt
+  ip       Bytes      @db.Binary(16)
+  mask     Int        @db.UnsignedInt
+  last_ip  Bytes      @db.Binary(16)
+  name     String?    @db.Char(255)
+  comment  String?    @db.Text
+  VLANIPv6 VLANIPv6[]
+
+  @@unique([ip, mask], map: "ip")
+}
+
+model LDAPCache {
+  presented_username String    @unique(map: "presented_username") @db.Char(64)
+  successful_hash    String    @db.Char(40)
+  first_success      DateTime  @default(now()) @db.Timestamp(0)
+  last_retry         DateTime? @db.Timestamp(0)
+  displayed_name     String?   @db.Char(128)
+  memberof           String?   @db.Text
+
+  @@index([presented_username, successful_hash], map: "scanidx")
+}
+
+model Link {
+  porta                 Int     @unique(map: "porta") @default(0) @db.UnsignedInt
+  portb                 Int     @unique(map: "portb") @default(0) @db.UnsignedInt
+  cable                 String? @db.Char(64)
+  Port_Link_portaToPort Port    @relation("Link_portaToPort", fields: [porta], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "Link-FK-a")
+  Port_Link_portbToPort Port    @relation("Link_portbToPort", fields: [portb], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "Link-FK-b")
+
+  @@id([porta, portb])
+}
+
+model Molecule {
+  id                                                      Int             @id @default(autoincrement()) @db.UnsignedInt
+  Atom                                                    Atom[]
+  MountOperation_MountOperation_new_molecule_idToMolecule MountOperation? @relation("MountOperation_new_molecule_idToMolecule")
+  MountOperation_MountOperation_old_molecule_idToMolecule MountOperation? @relation("MountOperation_old_molecule_idToMolecule")
+}
+
+model MountOperation {
+  id                                                Int       @id @default(autoincrement()) @db.UnsignedInt
+  object_id                                         Int       @default(0) @db.UnsignedInt
+  ctime                                             DateTime  @default(now()) @db.Timestamp(0)
+  user_name                                         String?   @db.Char(64)
+  old_molecule_id                                   Int?      @unique(map: "old_molecule_id") @db.UnsignedInt
+  new_molecule_id                                   Int?      @unique(map: "new_molecule_id") @db.UnsignedInt
+  comment                                           String?   @db.Text
+  Molecule_MountOperation_new_molecule_idToMolecule Molecule? @relation("MountOperation_new_molecule_idToMolecule", fields: [new_molecule_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "MountOperation-FK-new_molecule_id")
+  Object                                            Object    @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "MountOperation-FK-object_id")
+  Molecule_MountOperation_old_molecule_idToMolecule Molecule? @relation("MountOperation_old_molecule_idToMolecule", fields: [old_molecule_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "MountOperation-FK-old_molecule_id")
+
+  @@index([object_id], map: "object_id")
+}
+
+model Object {
+  id                                    Int                 @id @default(autoincrement()) @db.UnsignedInt
+  name                                  String?             @db.Char(255)
+  label                                 String?             @db.Char(255)
+  objtype_id                            Int                 @default(1) @db.UnsignedInt
+  asset_no                              String?             @unique(map: "asset_no") @db.Char(64)
+  has_problems                          Object_has_problems @default(no)
+  comment                               String?             @db.Text
+  Atom                                  Atom[]
+  AttributeValue                        AttributeValue[]
+  CachedPVM                             CachedPVM[]
+  IPv4Allocation                        IPv4Allocation[]
+  IPv4LB                                IPv4LB[]            @ignore
+  IPv4NAT                               IPv4NAT[]
+  IPv6Allocation                        IPv6Allocation[]
+  MountOperation                        MountOperation[]
+  ObjectHistory                         ObjectHistory[]
+  ObjectLog                             ObjectLog[]
+  Port                                  Port[]
+  RackSpace_RackSpace_object_idToObject RackSpace[]         @relation("RackSpace_object_idToObject")
+  RackSpace_RackSpace_rack_idToObject   RackSpace[]         @relation("RackSpace_rack_idToObject")
+  RackThumbnail                         RackThumbnail?
+  VLANSwitch                            VLANSwitch?
+  VSEnabledIPs                          VSEnabledIPs[]
+  VSEnabledPorts                        VSEnabledPorts[]
+
+  // `id` is already the primary key, so this pair is necessarily unique and
+  // can safely be used by Prisma for RackTables' composite foreign key.
+  @@unique([id, objtype_id])
+  @@index([id, objtype_id], map: "id-tid")
+  @@index([objtype_id, id], map: "type_id")
+}
+
+model ObjectHistory {
+  event_id     Int                        @id @default(autoincrement()) @db.UnsignedInt
+  id           Int?                       @db.UnsignedInt
+  name         String?                    @db.Char(255)
+  label        String?                    @db.Char(255)
+  objtype_id   Int?                       @db.UnsignedInt
+  asset_no     String?                    @db.Char(64)
+  has_problems ObjectHistory_has_problems @default(no)
+  comment      String?                    @db.Text
+  ctime        DateTime                   @default(now()) @db.Timestamp(0)
+  user_name    String?                    @db.Char(64)
+  Object       Object?                    @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "ObjectHistory-FK-object_id")
+
+  @@index([id], map: "id")
+}
+
+model ObjectLog {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  object_id Int      @db.UnsignedInt
+  user      String   @db.Char(64)
+  date      DateTime @db.DateTime(0)
+  content   String   @db.Text
+  Object    Object   @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "ObjectLog-FK-object_id")
+
+  @@index([date], map: "date")
+  @@index([object_id], map: "object_id")
+}
+
+model ObjectParentCompat {
+  parent_objtype_id Int @db.UnsignedInt
+  child_objtype_id  Int @db.UnsignedInt
+
+  @@unique([parent_objtype_id, child_objtype_id], map: "parent_child")
+}
+
+model PatchCableConnector {
+  id                        Int                         @id @default(autoincrement()) @db.UnsignedInt
+  origin                    PatchCableConnector_origin  @default(custom)
+  connector                 String                      @db.Char(32)
+  PatchCableConnectorCompat PatchCableConnectorCompat[]
+
+  @@unique([connector, origin], map: "connector_per_origin")
+}
+
+model PatchCableConnectorCompat {
+  pctype_id                                                                       Int                 @db.UnsignedInt
+  connector_id                                                                    Int                 @db.UnsignedInt
+  PatchCableConnector                                                             PatchCableConnector @relation(fields: [connector_id], references: [id], onUpdate: Restrict, map: "PatchCableConnectorCompat-FK-connector_id")
+  PatchCableType                                                                  PatchCableType      @relation(fields: [pctype_id], references: [id], onUpdate: Restrict, map: "PatchCableConnectorCompat-FK-pctype_id")
+  PatchCableHeap_PatchCableHeap_pctype_id_end1_conn_idToPatchCableConnectorCompat PatchCableHeap[]    @relation("PatchCableHeap_pctype_id_end1_conn_idToPatchCableConnectorCompat")
+  PatchCableHeap_PatchCableHeap_pctype_id_end2_conn_idToPatchCableConnectorCompat PatchCableHeap[]    @relation("PatchCableHeap_pctype_id_end2_conn_idToPatchCableConnectorCompat")
+
+  @@id([pctype_id, connector_id])
+  @@index([connector_id], map: "connector_id")
+}
+
+model PatchCableHeap {
+  id                                                                                         Int                       @id @default(autoincrement()) @db.UnsignedInt
+  pctype_id                                                                                  Int                       @db.UnsignedInt
+  end1_conn_id                                                                               Int                       @db.UnsignedInt
+  end2_conn_id                                                                               Int                       @db.UnsignedInt
+  amount                                                                                     Int                       @default(0) @db.UnsignedSmallInt
+  length                                                                                     Decimal                   @default(1.00) @db.Decimal(5, 2)
+  description                                                                                String?                   @db.Char(255)
+  PatchCableConnectorCompat_PatchCableHeap_pctype_id_end1_conn_idToPatchCableConnectorCompat PatchCableConnectorCompat @relation("PatchCableHeap_pctype_id_end1_conn_idToPatchCableConnectorCompat", fields: [pctype_id, end1_conn_id], references: [pctype_id, connector_id], onUpdate: Restrict, map: "PatchCableHeap-FK-compat1")
+  PatchCableConnectorCompat_PatchCableHeap_pctype_id_end2_conn_idToPatchCableConnectorCompat PatchCableConnectorCompat @relation("PatchCableHeap_pctype_id_end2_conn_idToPatchCableConnectorCompat", fields: [pctype_id, end2_conn_id], references: [pctype_id, connector_id], onUpdate: Restrict, map: "PatchCableHeap-FK-compat2")
+  PatchCableHeapLog                                                                          PatchCableHeapLog[]
+
+  @@index([pctype_id, end1_conn_id], map: "compat1")
+  @@index([pctype_id, end2_conn_id], map: "compat2")
+}
+
+model PatchCableHeapLog {
+  id             Int            @id @default(autoincrement()) @db.UnsignedInt
+  heap_id        Int            @db.UnsignedInt
+  date           DateTime       @db.DateTime(0)
+  user           String         @db.Char(64)
+  message        String         @db.Char(255)
+  PatchCableHeap PatchCableHeap @relation(fields: [heap_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "PatchCableHeapLog-FK-heap_id")
+
+  @@index([heap_id, date], map: "heap_id-date")
+}
+
+model PatchCableOIFCompat {
+  pctype_id          Int                @db.UnsignedInt
+  oif_id             Int                @db.UnsignedInt
+  PortOuterInterface PortOuterInterface @relation(fields: [oif_id], references: [id], onUpdate: Restrict, map: "PatchCableOIFCompat-FK-oif_id")
+  PatchCableType     PatchCableType     @relation(fields: [pctype_id], references: [id], onUpdate: Restrict, map: "PatchCableOIFCompat-FK-pctype_id")
+
+  @@id([pctype_id, oif_id])
+  @@index([oif_id], map: "oif_id")
+}
+
+model PatchCableType {
+  id                        Int                         @id @default(autoincrement()) @db.UnsignedInt
+  origin                    PatchCableType_origin       @default(custom)
+  pctype                    String                      @db.Char(64)
+  PatchCableConnectorCompat PatchCableConnectorCompat[]
+  PatchCableOIFCompat       PatchCableOIFCompat[]
+
+  @@unique([pctype, origin], map: "pctype_per_origin")
+}
+
+model Plugin {
+  name     String       @id @db.Char(255)
+  longname String       @db.Char(255)
+  version  String       @db.Char(64)
+  home_url String       @db.Char(255)
+  state    Plugin_state @default(disabled)
+}
+
+model Port {
+  id                    Int                 @id @default(autoincrement()) @db.UnsignedInt
+  object_id             Int                 @default(0) @db.UnsignedInt
+  name                  String              @default("") @db.Char(255)
+  iif_id                Int                 @db.UnsignedInt
+  type                  Int                 @default(0) @db.UnsignedInt
+  l2address             String?             @db.Char(64)
+  reservation_comment   String?             @db.Char(255)
+  label                 String?             @db.Char(255)
+  Link_Link_portaToPort Link?               @relation("Link_portaToPort")
+  Link_Link_portbToPort Link?               @relation("Link_portbToPort")
+  PortInterfaceCompat   PortInterfaceCompat @relation(fields: [iif_id, type], references: [iif_id, oif_id], onUpdate: Restrict, map: "Port-FK-iif-oif")
+  Object                Object              @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "Port-FK-object_id")
+  PortLog               PortLog[]
+
+  @@unique([object_id, iif_id, type, name], map: "object_iif_oif_name")
+  @@index([iif_id, type], map: "Port-FK-iif-oif")
+  @@index([reservation_comment], map: "comment")
+  @@index([l2address], map: "l2address")
+  @@index([type], map: "type")
+}
+
+model PortAllowedVLAN {
+  object_id      Int             @db.UnsignedInt
+  port_name      String          @db.Char(255)
+  vlan_id        Int             @default(0) @db.UnsignedInt
+  PortVLANMode   PortVLANMode    @relation(fields: [object_id, port_name], references: [object_id, port_name], onDelete: Cascade, onUpdate: Restrict, map: "PortAllowedVLAN-FK-object-port")
+  VLANValidID    VLANValidID     @relation(fields: [vlan_id], references: [vlan_id], onUpdate: Restrict, map: "PortAllowedVLAN-FK-vlan_id")
+  PortNativeVLAN PortNativeVLAN?
+
+  @@id([object_id, port_name, vlan_id])
+  @@index([vlan_id], map: "vlan_id")
+}
+
+model PortCompat {
+  type1                                                   Int                @default(0) @db.UnsignedInt
+  type2                                                   Int                @default(0) @db.UnsignedInt
+  PortOuterInterface_PortCompat_type1ToPortOuterInterface PortOuterInterface @relation("PortCompat_type1ToPortOuterInterface", fields: [type1], references: [id], onUpdate: Restrict, map: "PortCompat-FK-oif_id1")
+  PortOuterInterface_PortCompat_type2ToPortOuterInterface PortOuterInterface @relation("PortCompat_type2ToPortOuterInterface", fields: [type2], references: [id], onUpdate: Restrict, map: "PortCompat-FK-oif_id2")
+
+  @@unique([type1, type2], map: "type1_2")
+  @@index([type2], map: "type2")
+}
+
+model PortInnerInterface {
+  id                  Int                   @id @db.UnsignedInt
+  iif_name            String                @unique(map: "iif_name") @db.Char(16)
+  PortInterfaceCompat PortInterfaceCompat[]
+}
+
+model PortInterfaceCompat {
+  iif_id             Int                @db.UnsignedInt
+  oif_id             Int                @db.UnsignedInt
+  Port               Port[]
+  PortInnerInterface PortInnerInterface @relation(fields: [iif_id], references: [id], onUpdate: Restrict, map: "PortInterfaceCompat-FK-iif_id")
+  PortOuterInterface PortOuterInterface @relation(fields: [oif_id], references: [id], onUpdate: Restrict, map: "PortInterfaceCompat-FK-oif_id")
+
+  @@unique([iif_id, oif_id], map: "pair")
+  @@index([oif_id], map: "PortInterfaceCompat-FK-oif_id")
+}
+
+model PortLog {
+  id      Int      @id @default(autoincrement()) @db.UnsignedInt
+  port_id Int      @db.UnsignedInt
+  date    DateTime @db.DateTime(0)
+  user    String   @db.VarChar(64)
+  message String   @db.Text
+  Port    Port     @relation(fields: [port_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "PortLog_ibfk_1")
+
+  @@index([port_id, date], map: "port_id-date")
+}
+
+model PortNativeVLAN {
+  object_id       Int             @db.UnsignedInt
+  port_name       String          @db.Char(255)
+  vlan_id         Int             @default(0) @db.UnsignedInt
+  PortAllowedVLAN PortAllowedVLAN @relation(fields: [object_id, port_name, vlan_id], references: [object_id, port_name, vlan_id], onDelete: Cascade, onUpdate: Restrict, map: "PortNativeVLAN-FK-compound")
+
+  @@id([object_id, port_name, vlan_id])
+  @@unique([object_id, port_name], map: "port_id")
+}
+
+model PortOuterInterface {
+  id                                              Int                   @id @default(autoincrement()) @db.UnsignedInt
+  oif_name                                        String                @unique(map: "oif_name") @db.Char(48)
+  PatchCableOIFCompat                             PatchCableOIFCompat[]
+  PortCompat_PortCompat_type1ToPortOuterInterface PortCompat[]          @relation("PortCompat_type1ToPortOuterInterface")
+  PortCompat_PortCompat_type2ToPortOuterInterface PortCompat[]          @relation("PortCompat_type2ToPortOuterInterface")
+  PortInterfaceCompat                             PortInterfaceCompat[]
+}
+
+model PortVLANMode {
+  object_id       Int                    @db.UnsignedInt
+  port_name       String                 @db.Char(255)
+  vlan_mode       PortVLANMode_vlan_mode @default(access)
+  PortAllowedVLAN PortAllowedVLAN[]
+  CachedPVM       CachedPVM              @relation(fields: [object_id, port_name], references: [object_id, port_name], onUpdate: Restrict, map: "PortVLANMode-FK-object-port")
+
+  @@id([object_id, port_name])
+}
+
+model RackSpace {
+  rack_id                            Int             @default(0) @db.UnsignedInt
+  unit_no                            Int             @default(0) @db.UnsignedInt
+  atom                               RackSpace_atom  @default(interior)
+  state                              RackSpace_state @default(A)
+  object_id                          Int?            @db.UnsignedInt
+  Object_RackSpace_object_idToObject Object?         @relation("RackSpace_object_idToObject", fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "RackSpace-FK-object_id")
+  Object_RackSpace_rack_idToObject   Object          @relation("RackSpace_rack_idToObject", fields: [rack_id], references: [id], onUpdate: Restrict, map: "RackSpace-FK-rack_id")
+
+  @@id([rack_id, unit_no, atom])
+  @@index([object_id], map: "RackSpace_object_id")
+}
+
+model RackThumbnail {
+  rack_id    Int    @unique(map: "rack_id") @db.UnsignedInt
+  thumb_data Bytes? @db.Blob
+  Object     Object @relation(fields: [rack_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "RackThumbnail-FK-rack_id")
+}
+
+model Script {
+  script_name String  @id @db.Char(64)
+  script_text String? @db.LongText
+}
+
+model TagStorage {
+  entity_realm      TagStorage_entity_realm @default(object)
+  entity_id         Int                     @db.UnsignedInt
+  tag_id            Int                     @default(0) @db.UnsignedInt
+  tag_is_assignable TagTree_is_assignable   @default(yes)
+  user              String?                 @db.Char(64)
+  date              DateTime?               @db.DateTime(0)
+  TagTree           TagTree                 @relation(fields: [tag_id, tag_is_assignable], references: [id, is_assignable], onUpdate: Restrict, map: "TagStorage-FK-TagTree")
+
+  @@unique([entity_realm, entity_id, tag_id], map: "entity_tag")
+  @@index([tag_id], map: "TagStorage-FK-tag_id")
+  @@index([entity_id], map: "entity_id")
+  @@index([tag_id, tag_is_assignable], map: "tag_id-tag_is_assignable")
+}
+
+model TagTree {
+  id            Int                   @id @default(autoincrement()) @db.UnsignedInt
+  parent_id     Int?                  @db.UnsignedInt
+  is_assignable TagTree_is_assignable @default(yes)
+  tag           String?               @unique(map: "tag") @db.Char(255)
+  color         Int?                  @db.UnsignedMediumInt
+  description   String?               @db.Char(255)
+  TagStorage    TagStorage[]
+  TagTree       TagTree?              @relation("TagTreeToTagTree", fields: [parent_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "TagTree-K-parent_id")
+  other_TagTree TagTree[]             @relation("TagTreeToTagTree")
+
+  // `id` is already the primary key; the compound uniqueness lets Prisma
+  // represent RackTables' composite TagStorage foreign key.
+  @@unique([id, is_assignable])
+  @@index([parent_id], map: "TagTree-K-parent_id")
+  @@index([id, is_assignable], map: "id-is_assignable")
+}
+
+model UserAccount {
+  user_id            Int     @id @default(autoincrement()) @db.UnsignedInt
+  user_name          String  @unique(map: "user_name") @default("") @db.Char(64)
+  user_password_hash String? @db.Char(40)
+  user_realname      String? @db.Char(64)
+}
+
+model UserConfig {
+  varname  String @db.Char(32)
+  varvalue String @db.Text
+  user     String @db.Char(64)
+  Config   Config @relation(fields: [varname], references: [varname], onDelete: Cascade, map: "UserConfig-FK-varname")
+
+  @@unique([user, varname], map: "user_varname")
+  @@index([varname], map: "varname")
+}
+
+model VLANDescription {
+  domain_id   Int                       @db.UnsignedInt
+  vlan_id     Int                       @default(0) @db.UnsignedInt
+  vlan_type   VLANDescription_vlan_type @default(ondemand)
+  vlan_descr  String?                   @db.Char(255)
+  VLANDomain  VLANDomain                @relation(fields: [domain_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VLANDescription-FK-domain_id")
+  VLANValidID VLANValidID               @relation(fields: [vlan_id], references: [vlan_id], onUpdate: Restrict, map: "VLANDescription-FK-vlan_id")
+  VLANIPv4    VLANIPv4[]
+  VLANIPv6    VLANIPv6[]
+
+  @@id([domain_id, vlan_id])
+  @@index([vlan_id], map: "vlan_id")
+}
+
+model VLANDomain {
+  id               Int               @id @default(autoincrement()) @db.UnsignedInt
+  group_id         Int?              @db.UnsignedInt
+  description      String?           @unique(map: "description") @db.Char(255)
+  VLANDescription  VLANDescription[]
+  VLANDomain       VLANDomain?       @relation("VLANDomainToVLANDomain", fields: [group_id], references: [id], onUpdate: Restrict, map: "VLANDomain-FK-group_id")
+  other_VLANDomain VLANDomain[]      @relation("VLANDomainToVLANDomain")
+  VLANSwitch       VLANSwitch[]
+
+  @@index([group_id], map: "VLANDomain-FK-group_id")
+}
+
+model VLANIPv4 {
+  domain_id       Int             @db.UnsignedInt
+  vlan_id         Int             @db.UnsignedInt
+  ipv4net_id      Int             @db.UnsignedInt
+  VLANDescription VLANDescription @relation(fields: [domain_id, vlan_id], references: [domain_id, vlan_id], onDelete: Cascade, onUpdate: Restrict, map: "VLANIPv4-FK-compound")
+  IPv4Network     IPv4Network     @relation(fields: [ipv4net_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VLANIPv4-FK-ipv4net_id")
+
+  @@unique([ipv4net_id, domain_id, vlan_id], map: "network-domain-vlan")
+  @@index([domain_id, vlan_id], map: "VLANIPv4-FK-compound")
+}
+
+model VLANIPv6 {
+  domain_id       Int             @db.UnsignedInt
+  vlan_id         Int             @db.UnsignedInt
+  ipv6net_id      Int             @db.UnsignedInt
+  VLANDescription VLANDescription @relation(fields: [domain_id, vlan_id], references: [domain_id, vlan_id], onDelete: Cascade, onUpdate: Restrict, map: "VLANIPv6-FK-compound")
+  IPv6Network     IPv6Network     @relation(fields: [ipv6net_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VLANIPv6-FK-ipv6net_id")
+
+  @@unique([ipv6net_id, domain_id, vlan_id], map: "network-domain-vlan")
+  @@index([domain_id, vlan_id], map: "VLANIPv6-FK-compound")
+}
+
+model VLANSTRule {
+  vst_id             Int                  @db.UnsignedInt
+  rule_no            Int                  @db.UnsignedInt
+  port_pcre          String               @db.Char(255)
+  port_role          VLANSTRule_port_role @default(none)
+  wrt_vlans          String?              @db.Text
+  description        String?              @db.Char(255)
+  VLANSwitchTemplate VLANSwitchTemplate   @relation(fields: [vst_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VLANSTRule-FK-vst_id")
+
+  @@unique([vst_id, rule_no], map: "vst-rule")
+}
+
+model VLANSwitch {
+  object_id          Int                    @unique(map: "object_id") @db.UnsignedInt
+  domain_id          Int                    @db.UnsignedInt
+  template_id        Int                    @db.UnsignedInt
+  mutex_rev          Int                    @default(0) @db.UnsignedInt
+  out_of_sync        VLANSwitch_out_of_sync @default(yes)
+  last_errno         Int                    @default(0) @db.UnsignedInt
+  last_change        DateTime               @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  last_push_started  DateTime               @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  last_push_finished DateTime               @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  last_error_ts      DateTime               @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  VLANDomain         VLANDomain             @relation(fields: [domain_id], references: [id], onUpdate: Restrict, map: "VLANSwitch-FK-domain_id")
+  Object             Object                 @relation(fields: [object_id], references: [id], onUpdate: Restrict, map: "VLANSwitch-FK-object_id")
+  VLANSwitchTemplate VLANSwitchTemplate     @relation(fields: [template_id], references: [id], onUpdate: Restrict, map: "VLANSwitch-FK-template_id")
+
+  @@index([domain_id], map: "domain_id")
+  @@index([last_errno], map: "last_errno")
+  @@index([out_of_sync], map: "out_of_sync")
+  @@index([template_id], map: "template_id")
+}
+
+model VLANSwitchTemplate {
+  id          Int          @id @default(autoincrement()) @db.UnsignedInt
+  mutex_rev   Int
+  description String?      @unique(map: "description") @db.Char(255)
+  saved_by    String       @db.Char(64)
+  VLANSTRule  VLANSTRule[]
+  VLANSwitch  VLANSwitch[]
+}
+
+model VLANValidID {
+  vlan_id         Int               @id @default(1) @db.UnsignedInt
+  CachedPAV       CachedPAV[]
+  PortAllowedVLAN PortAllowedVLAN[]
+  VLANDescription VLANDescription[]
+}
+
+model VS {
+  id       Int       @id @default(autoincrement()) @db.UnsignedInt
+  name     String?   @db.Char(255)
+  vsconfig String?   @db.Text
+  rsconfig String?   @db.Text
+  VSIPs    VSIPs[]
+  VSPorts  VSPorts[]
+}
+
+model VSEnabledIPs {
+  object_id  Int        @db.UnsignedInt
+  vs_id      Int        @db.UnsignedInt
+  vip        Bytes      @db.VarBinary(16)
+  rspool_id  Int        @db.UnsignedInt
+  prio       String?    @db.VarChar(255)
+  vsconfig   String?    @db.Text
+  rsconfig   String?    @db.Text
+  Object     Object     @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VSEnabledIPs-FK-object_id")
+  IPv4RSPool IPv4RSPool @relation(fields: [rspool_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VSEnabledIPs-FK-rspool_id")
+  VSIPs      VSIPs      @relation(fields: [vs_id, vip], references: [vs_id, vip], onDelete: Cascade, onUpdate: Restrict, map: "VSEnabledIPs-FK-vs_id-vip")
+
+  @@id([object_id, vs_id, vip, rspool_id])
+  @@index([rspool_id], map: "VSEnabledIPs-FK-rspool_id")
+  @@index([vs_id, vip], map: "VSEnabledIPs-FK-vs_id-vip")
+  @@index([vip], map: "vip")
+}
+
+model VSEnabledPorts {
+  object_id  Int           @db.UnsignedInt
+  vs_id      Int           @db.UnsignedInt
+  proto      VSPorts_proto
+  vport      Int           @db.UnsignedInt
+  rspool_id  Int           @db.UnsignedInt
+  vsconfig   String?       @db.Text
+  rsconfig   String?       @db.Text
+  Object     Object        @relation(fields: [object_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VSEnabledPorts-FK-object_id")
+  IPv4RSPool IPv4RSPool    @relation(fields: [rspool_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VSEnabledPorts-FK-rspool_id")
+  VSPorts    VSPorts       @relation(fields: [vs_id, proto, vport], references: [vs_id, proto, vport], onDelete: Cascade, onUpdate: Restrict, map: "VSEnabledPorts-FK-vs_id-proto-vport")
+
+  @@id([object_id, vs_id, proto, vport, rspool_id])
+  @@index([rspool_id], map: "VSEnabledPorts-FK-rspool_id")
+  @@index([vs_id, proto, vport], map: "VSEnabledPorts-FK-vs_id-proto-vport")
+}
+
+model VSIPs {
+  vs_id        Int            @db.UnsignedInt
+  vip          Bytes          @db.VarBinary(16)
+  vsconfig     String?        @db.Text
+  rsconfig     String?        @db.Text
+  VSEnabledIPs VSEnabledIPs[]
+  VS           VS             @relation(fields: [vs_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VSIPs-vs_id")
+
+  @@id([vs_id, vip])
+  @@index([vip], map: "vip")
+}
+
+model VSPorts {
+  vs_id          Int              @db.UnsignedInt
+  proto          VSPorts_proto
+  vport          Int              @db.UnsignedInt
+  vsconfig       String?          @db.Text
+  rsconfig       String?          @db.Text
+  VSEnabledPorts VSEnabledPorts[]
+  VS             VS               @relation(fields: [vs_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "VS-vs_id")
+
+  @@id([vs_id, proto, vport])
+  @@index([proto, vport], map: "proto-vport")
+}
+
+view Row {
+  id            Int     @unique @default(0) @db.UnsignedInt
+  name          String? @db.Char(255)
+  location_id   Int?    @default(0) @db.UnsignedInt
+  location_name String? @db.Char(255)
+}
+
+view RackObject {
+  id           Int                     @unique @default(0) @db.UnsignedInt
+  name         String?                 @db.Char(255)
+  label        String?                 @db.Char(255)
+  objtype_id   Int                     @default(1) @db.UnsignedInt
+  asset_no     String?                 @db.Char(64)
+  has_problems RackObject_has_problems @default(no)
+  comment      String?                 @db.Text
+}
+
+view Location {
+  id           Int                   @unique @default(0) @db.UnsignedInt
+  name         String?               @db.Char(255)
+  has_problems Location_has_problems @default(no)
+  comment      String?               @db.Text
+  parent_id    Int?                  @default(0) @db.UnsignedInt
+  parent_name  String?               @db.Char(255)
+}
+
+view Rack {
+  id            Int               @unique @default(0) @db.UnsignedInt
+  name          String?           @db.Char(255)
+  asset_no      String?           @db.Char(64)
+  has_problems  Rack_has_problems @default(no)
+  comment       String?           @db.Text
+  height        Int?              @db.UnsignedInt
+  sort_order    Int?              @db.UnsignedInt
+  thumb_data    Bytes?            @db.Blob
+  row_id        Int               @default(0) @db.UnsignedInt
+  row_name      String?           @db.Char(255)
+  location_id   Int?              @default(0) @db.UnsignedInt
+  location_name String?           @db.Char(255)
+}
+
+enum TagStorage_entity_realm {
+  file
+  ipv4net
+  ipv4rspool
+  ipv4vs
+  ipvs
+  ipv6net
+  location
+  object
+  rack
+  user
+  vst
+}
+
+enum IPv4RS_inservice {
+  yes
+  no
+}
+
+enum VSPorts_proto {
+  TCP
+  UDP
+  MARK
+}
+
+enum PatchCableType_origin {
+  default
+  custom
+}
+
+enum Attribute_type {
+  string
+  uint
+  float
+  dict
+  date
+}
+
+enum PatchCableConnector_origin {
+  default
+  custom
+}
+
+enum Chapter_sticky {
+  yes
+  no
+}
+
+enum EntityLink_parent_entity_type {
+  location
+  object
+  rack
+  row
+}
+
+enum IPv4NAT_proto {
+  TCP
+  UDP
+  ALL
+}
+
+enum FileLink_entity_type {
+  ipv4net
+  ipv4rspool
+  ipv4vs
+  ipvs
+  ipv6net
+  location
+  object
+  rack
+  row
+  user
+}
+
+enum PortVLANMode_vlan_mode {
+  access
+  trunk
+}
+
+enum VSEnabledPorts_proto {
+  TCP
+  UDP
+  MARK
+}
+
+enum TagTree_is_assignable {
+  yes
+  no
+}
+
+enum VLANDescription_vlan_type {
+  ondemand
+  compulsory
+  alien
+}
+
+enum Location_has_problems {
+  yes
+  no
+}
+
+enum Config_vartype {
+  string
+  uint
+}
+
+enum Dictionary_dict_sticky {
+  yes
+  no
+}
+
+enum CachedPVM_vlan_mode {
+  access
+  trunk
+}
+
+enum RackSpace_atom {
+  front
+  interior
+  rear
+}
+
+enum AttributeMap_sticky {
+  yes
+  no
+}
+
+enum Atom_atom {
+  front
+  interior
+  rear
+}
+
+enum IPv6Address_reserved {
+  yes
+  no
+}
+
+enum IPv4Allocation_type {
+  regular
+  shared
+  virtual
+  router
+  point2point
+  sharedrouter
+}
+
+enum TagStorage_tag_is_assignable {
+  yes
+  no
+}
+
+enum IPv6Allocation_type {
+  regular
+  shared
+  virtual
+  router
+  point2point
+  sharedrouter
+}
+
+enum IPv4VS_proto {
+  TCP
+  UDP
+  MARK
+}
+
+enum Config_emptyok {
+  yes
+  no
+}
+
+enum Rack_has_problems {
+  yes
+  no
+}
+
+enum IPv4Address_reserved {
+  yes
+  no
+}
+
+enum RackSpace_state {
+  A
+  U
+  T
+}
+
+enum EntityLink_child_entity_type {
+  location
+  object
+  rack
+  row
+}
+
+enum VLANSTRule_port_role {
+  access
+  trunk
+  anymode
+  uplink
+  downlink
+  none
+}
+
+enum VLANSwitch_out_of_sync {
+  yes
+  no
+}
+
+enum Config_is_hidden {
+  yes
+  no
+}
+
+enum Plugin_state {
+  disabled
+  enabled
+}
+
+enum RackObject_has_problems {
+  yes
+  no
+}
+
+enum Config_is_userdefined {
+  yes
+  no
+}
+
+enum Object_has_problems {
+  yes
+  no
+}
+
+enum ObjectHistory_has_problems {
+  yes
+  no
+}

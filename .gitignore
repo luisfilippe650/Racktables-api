@@ -1,16 +1,10 @@
-# Virtual environment
-.venv/
-venv/
-env/
-
-#envs
+# Environment files
 .env
+.env.*
+!.env.example
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Node.js dependencies
+node_modules/
 
 # IDEs
 .idea/
@@ -26,7 +20,12 @@ Thumbs.db
 # Build / cache
 dist/
 build/
-*.egg-info/
+coverage/
+.eslintcache
+*.tsbuildinfo
 
 # Docker
 *.pid
+
+# Generated Prisma Client
+/src/generated/prisma/
