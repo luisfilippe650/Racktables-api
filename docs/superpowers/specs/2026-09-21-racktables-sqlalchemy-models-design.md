@@ -22,7 +22,9 @@ The schema in the running `rack_db` Docker container is authoritative. It curren
 
 Thirteen legacy tables lack a physical `PRIMARY KEY`: `AttributeMap`, `IPv4LB`, `LDAPCache`, `ObjectParentCompat`, `PortCompat`, `PortInterfaceCompat`, `RackThumbnail`, `TagStorage`, `UserConfig`, `VLANIPv4`, `VLANIPv6`, `VLANSTRule`, and `VLANSwitch`.
 
-Each has a unique index. Its unique-index columns will be supplied through `__mapper_args__["primary_key"]` so SQLAlchemy has a stable identity key for CRUD operations. The corresponding `Column` objects will not be marked `primary_key=True`; therefore the SQLAlchemy table metadata will not claim that the database has a physical primary-key constraint.
+Each has a unique index. Its unique-index columns will be supplied through `__mapper_args__["primary_key"]` so SQLAlchemy has an identity key without adding a physical constraint. The corresponding `Column` objects will not be marked `primary_key=True`; therefore the SQLAlchemy table metadata will not claim that the database has a physical primary-key constraint.
+
+`IPv4LB` is the exception to complete CRUD support: its only unique index is `(object_id, vs_id)`, and both columns are nullable. MariaDB can therefore contain rows without a stable unique identity, and SQLAlchemy cannot safely update or delete instances whose mapper identity includes `NULL`. The model will remain faithful to the existing schema and will support queries and inserts; updates and deletes are only reliable when both identity columns are non-null. No database migration will be introduced.
 
 ## Naming and typing
 
