@@ -29,8 +29,10 @@ class Atom(Base):
     __table_args__ = (
         PrimaryKeyConstraint('molecule_id', 'rack_id', 'unit_no', 'atom', name='PRIMARY'),
         Index('Atom-FK-rack_id', 'rack_id'),
-        ForeignKeyConstraint(['molecule_id'], ['Molecule.id'], name='Atom-FK-molecule_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['rack_id'], ['Object.id'], name='Atom-FK-rack_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['molecule_id'], ['Molecule.id'], name='Atom-FK-molecule_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['rack_id'], ['Object.id'], name='Atom-FK-rack_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     molecule_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -57,12 +59,16 @@ class AttributeMap(Base):
         Index('attr_id', 'attr_id'),
         Index('chapter_id', 'chapter_id'),
         UniqueConstraint('objtype_id', 'attr_id', name='objtype_id'),
-        ForeignKeyConstraint(['attr_id'], ['Attribute.id'], name='AttributeMap-FK-attr_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['chapter_id'], ['Chapter.id'], name='AttributeMap-FK-chapter_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['attr_id'], ['Attribute.id'], name='AttributeMap-FK-attr_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
+        ForeignKeyConstraint(['chapter_id'], ['Chapter.id'], name='AttributeMap-FK-chapter_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    objtype_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('1'))
-    attr_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('1'))
+    objtype_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                            server_default=text('1'))
+    attr_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('1'))
     chapter_id: Mapped[int | None] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=True)
     sticky: Mapped[str | None] = mapped_column(mysql.ENUM('yes', 'no'), nullable=True, server_default=text("'no'"))
     __mapper_args__ = {"primary_key": (objtype_id, attr_id)}
@@ -76,12 +82,15 @@ class AttributeValue(Base):
         Index('attr_id-uint_value', 'attr_id', 'uint_value'),
         Index('id-tid', 'object_id', 'object_tid'),
         Index('object_tid-attr_id', 'object_tid', 'attr_id'),
-        ForeignKeyConstraint(['object_tid', 'attr_id'], ['AttributeMap.objtype_id', 'AttributeMap.attr_id'], name='AttributeValue-FK-map', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['object_id', 'object_tid'], ['Object.id', 'Object.objtype_id'], name='AttributeValue-FK-object', onupdate='CASCADE', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_tid', 'attr_id'], ['AttributeMap.objtype_id', 'AttributeMap.attr_id'],
+                             name='AttributeValue-FK-map', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id', 'object_tid'], ['Object.id', 'Object.objtype_id'],
+                             name='AttributeValue-FK-object', onupdate='CASCADE', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    object_tid: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    object_tid: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                            server_default=text('0'))
     attr_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     string_value: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
     uint_value: Mapped[int | None] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=True)
@@ -93,13 +102,16 @@ class CachedPAV(Base):
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'port_name', 'vlan_id', name='PRIMARY'),
         Index('vlan_id', 'vlan_id'),
-        ForeignKeyConstraint(['object_id', 'port_name'], ['CachedPVM.object_id', 'CachedPVM.port_name'], name='CachedPAV-FK-object-port', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['vlan_id'], ['VLANValidID.vlan_id'], name='CachedPAV-FK-vlan_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id', 'port_name'], ['CachedPVM.object_id', 'CachedPVM.port_name'],
+                             name='CachedPAV-FK-object-port', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['vlan_id'], ['VLANValidID.vlan_id'], name='CachedPAV-FK-vlan_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     port_name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
 
 
 class CachedPNV(Base):
@@ -107,24 +119,29 @@ class CachedPNV(Base):
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'port_name', 'vlan_id', name='PRIMARY'),
         UniqueConstraint('object_id', 'port_name', name='port_id'),
-        ForeignKeyConstraint(['object_id', 'port_name', 'vlan_id'], ['CachedPAV.object_id', 'CachedPAV.port_name', 'CachedPAV.vlan_id'], name='CachedPNV-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id', 'port_name', 'vlan_id'],
+                             ['CachedPAV.object_id', 'CachedPAV.port_name', 'CachedPAV.vlan_id'],
+                             name='CachedPNV-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     port_name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
 
 
 class CachedPVM(Base):
     __tablename__ = 'CachedPVM'
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'port_name', name='PRIMARY'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='CachedPVM-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='CachedPVM-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     port_name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    vlan_mode: Mapped[str] = mapped_column(mysql.ENUM('access', 'trunk'), nullable=False, server_default=text("'access'"))
+    vlan_mode: Mapped[str] = mapped_column(mysql.ENUM('access', 'trunk'), nullable=False,
+                                           server_default=text("'access'"))
 
 
 class Chapter(Base):
@@ -159,11 +176,13 @@ class Dictionary(Base):
     __table_args__ = (
         PrimaryKeyConstraint('dict_key', name='PRIMARY'),
         UniqueConstraint('chapter_id', 'dict_value', 'dict_sticky', name='dict_unique'),
-        ForeignKeyConstraint(['chapter_id'], ['Chapter.id'], name='Dictionary-FK-chapter_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['chapter_id'], ['Chapter.id'], name='Dictionary-FK-chapter_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     chapter_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    dict_key: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
+    dict_key: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                          autoincrement=True)
     dict_sticky: Mapped[str | None] = mapped_column(mysql.ENUM('yes', 'no'), nullable=True, server_default=text("'no'"))
     dict_value: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
 
@@ -173,7 +192,8 @@ class EntityLink(Base):
     __table_args__ = (
         PrimaryKeyConstraint('id', name='PRIMARY'),
         Index('EntityLink-compound', 'parent_entity_type', 'child_entity_type', 'child_entity_id'),
-        UniqueConstraint('parent_entity_type', 'parent_entity_id', 'child_entity_type', 'child_entity_id', name='EntityLink-unique'),
+        UniqueConstraint('parent_entity_type', 'parent_entity_id', 'child_entity_type', 'child_entity_id',
+                         name='EntityLink-unique'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
@@ -208,12 +228,15 @@ class FileLink(Base):
         PrimaryKeyConstraint('id', name='PRIMARY'),
         Index('FileLink-file_id', 'file_id'),
         UniqueConstraint('file_id', 'entity_type', 'entity_id', name='FileLink-unique'),
-        ForeignKeyConstraint(['file_id'], ['File.id'], name='FileLink-File_fkey', onupdate='CASCADE', ondelete='CASCADE'),
+        ForeignKeyConstraint(['file_id'], ['File.id'], name='FileLink-File_fkey', onupdate='CASCADE',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
     file_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    entity_type: Mapped[str] = mapped_column(mysql.ENUM('ipv4net', 'ipv4rspool', 'ipv4vs', 'ipvs', 'ipv6net', 'location', 'object', 'rack', 'row', 'user'), nullable=False, server_default=text("'object'"))
+    entity_type: Mapped[str] = mapped_column(
+        mysql.ENUM('ipv4net', 'ipv4rspool', 'ipv4vs', 'ipvs', 'ipv6net', 'location', 'object', 'rack', 'row', 'user'),
+        nullable=False, server_default=text("'object'"))
     entity_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10), nullable=False)
 
 
@@ -223,7 +246,8 @@ class IPv4Address(Base):
         PrimaryKeyConstraint('ip', name='PRIMARY'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    ip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    ip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                    server_default=text('0'))
     name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False, server_default=text("''"))
     comment: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False, server_default=text("''"))
     reserved: Mapped[str | None] = mapped_column(mysql.ENUM('yes', 'no'), nullable=True)
@@ -234,13 +258,18 @@ class IPv4Allocation(Base):
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'ip', name='PRIMARY'),
         Index('ip', 'ip'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv4Allocation-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv4Allocation-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    ip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                           server_default=text('0'))
+    ip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                    server_default=text('0'))
     name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False, server_default=text("''"))
-    type: Mapped[str] = mapped_column(mysql.ENUM('regular', 'shared', 'virtual', 'router', 'point2point', 'sharedrouter'), nullable=False, server_default=text("'regular'"))
+    type: Mapped[str] = mapped_column(
+        mysql.ENUM('regular', 'shared', 'virtual', 'router', 'point2point', 'sharedrouter'), nullable=False,
+        server_default=text("'regular'"))
 
 
 class IPv4LB(Base):
@@ -249,9 +278,12 @@ class IPv4LB(Base):
         Index('IPv4LB-FK-rspool_id', 'rspool_id'),
         Index('IPv4LB-FK-vs_id', 'vs_id'),
         UniqueConstraint('object_id', 'vs_id', name='LB-VS'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv4LB-FK-object_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='IPv4LB-FK-rspool_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['vs_id'], ['IPv4VS.id'], name='IPv4LB-FK-vs_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv4LB-FK-object_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
+        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='IPv4LB-FK-rspool_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
+        ForeignKeyConstraint(['vs_id'], ['IPv4VS.id'], name='IPv4LB-FK-vs_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int | None] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=True)
@@ -284,15 +316,21 @@ class IPv4NAT(Base):
         Index('localip', 'localip'),
         Index('object_id', 'object_id'),
         Index('remoteip', 'remoteip'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv4NAT-FK-object_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv4NAT-FK-object_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                           server_default=text('0'))
     proto: Mapped[str] = mapped_column(mysql.ENUM('TCP', 'UDP', 'ALL'), nullable=False, server_default=text("'TCP'"))
-    localip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    localport: Mapped[int] = mapped_column(mysql.SMALLINT(display_width=5, unsigned=True), nullable=False, server_default=text('0'))
-    remoteip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    remoteport: Mapped[int] = mapped_column(mysql.SMALLINT(display_width=5, unsigned=True), nullable=False, server_default=text('0'))
+    localip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
+    localport: Mapped[int] = mapped_column(mysql.SMALLINT(display_width=5, unsigned=True), nullable=False,
+                                           server_default=text('0'))
+    remoteip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                          server_default=text('0'))
+    remoteport: Mapped[int] = mapped_column(mysql.SMALLINT(display_width=5, unsigned=True), nullable=False,
+                                            server_default=text('0'))
     description: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
 
 
@@ -304,8 +342,10 @@ class IPv4Network(Base):
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
-    ip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    mask: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    ip: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                    server_default=text('0'))
+    mask: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                      server_default=text('0'))
     name: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
     comment: Mapped[str | None] = mapped_column(mysql.TEXT(), nullable=True)
 
@@ -316,7 +356,8 @@ class IPv4RS(Base):
         PrimaryKeyConstraint('id', name='PRIMARY'),
         UniqueConstraint('rspool_id', 'rsip', 'rsport', name='pool-endpoint'),
         Index('rsip', 'rsip'),
-        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='IPv4RS-FK', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='IPv4RS-FK', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
@@ -373,13 +414,17 @@ class IPv6Allocation(Base):
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'ip', name='PRIMARY'),
         Index('ip', 'ip'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv6Allocation-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='IPv6Allocation-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                           server_default=text('0'))
     ip: Mapped[bytes] = mapped_column(mysql.BINARY(16), nullable=False)
     name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False, server_default=text("''"))
-    type: Mapped[str] = mapped_column(mysql.ENUM('regular', 'shared', 'virtual', 'router', 'point2point', 'sharedrouter'), nullable=False, server_default=text("'regular'"))
+    type: Mapped[str] = mapped_column(
+        mysql.ENUM('regular', 'shared', 'virtual', 'router', 'point2point', 'sharedrouter'), nullable=False,
+        server_default=text("'regular'"))
 
 
 class IPv6Log(Base):
@@ -420,7 +465,8 @@ class LDAPCache(Base):
     )
     presented_username: Mapped[str] = mapped_column(mysql.CHAR(64), nullable=False)
     successful_hash: Mapped[str] = mapped_column(mysql.CHAR(40), nullable=False)
-    first_success: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False, server_default=text('current_timestamp()'))
+    first_success: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False,
+                                                    server_default=text('current_timestamp()'))
     last_retry: Mapped[datetime | None] = mapped_column(mysql.TIMESTAMP(), nullable=True)
     displayed_name: Mapped[str | None] = mapped_column(mysql.CHAR(128), nullable=True)
     memberof: Mapped[str | None] = mapped_column(mysql.TEXT(), nullable=True)
@@ -437,8 +483,10 @@ class Link(Base):
         ForeignKeyConstraint(['portb'], ['Port.id'], name='Link-FK-b', onupdate='RESTRICT', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    porta: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    portb: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    porta: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                       server_default=text('0'))
+    portb: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                       server_default=text('0'))
     cable: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
 
 
@@ -458,14 +506,20 @@ class MountOperation(Base):
         UniqueConstraint('new_molecule_id', name='new_molecule_id'),
         Index('object_id', 'object_id'),
         UniqueConstraint('old_molecule_id', name='old_molecule_id'),
-        ForeignKeyConstraint(['new_molecule_id'], ['Molecule.id'], name='MountOperation-FK-new_molecule_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='MountOperation-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['old_molecule_id'], ['Molecule.id'], name='MountOperation-FK-old_molecule_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['new_molecule_id'], ['Molecule.id'], name='MountOperation-FK-new_molecule_id',
+                             onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='MountOperation-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['old_molecule_id'], ['Molecule.id'], name='MountOperation-FK-old_molecule_id',
+                             onupdate='RESTRICT', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
-    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    ctime: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False, server_default=text('current_timestamp() ON UPDATE current_timestamp()'), server_onupdate=FetchedValue())
+    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                           server_default=text('0'))
+    ctime: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False,
+                                            server_default=text('current_timestamp() ON UPDATE current_timestamp()'),
+                                            server_onupdate=FetchedValue())
     user_name: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
     old_molecule_id: Mapped[int | None] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=True)
     new_molecule_id: Mapped[int | None] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=True)
@@ -484,7 +538,8 @@ class Object(Base):
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
     name: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
     label: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
-    objtype_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('1'))
+    objtype_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                            server_default=text('1'))
     asset_no: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
     has_problems: Mapped[str] = mapped_column(mysql.ENUM('yes', 'no'), nullable=False, server_default=text("'no'"))
     comment: Mapped[str | None] = mapped_column(mysql.TEXT(), nullable=True)
@@ -495,10 +550,12 @@ class ObjectHistory(Base):
     __table_args__ = (
         PrimaryKeyConstraint('event_id', name='PRIMARY'),
         Index('id', 'id'),
-        ForeignKeyConstraint(['id'], ['Object.id'], name='ObjectHistory-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['id'], ['Object.id'], name='ObjectHistory-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    event_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
+    event_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                          autoincrement=True)
     id: Mapped[int | None] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=True)
     name: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
     label: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
@@ -506,7 +563,9 @@ class ObjectHistory(Base):
     asset_no: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
     has_problems: Mapped[str] = mapped_column(mysql.ENUM('yes', 'no'), nullable=False, server_default=text("'no'"))
     comment: Mapped[str | None] = mapped_column(mysql.TEXT(), nullable=True)
-    ctime: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False, server_default=text('current_timestamp() ON UPDATE current_timestamp()'), server_onupdate=FetchedValue())
+    ctime: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False,
+                                            server_default=text('current_timestamp() ON UPDATE current_timestamp()'),
+                                            server_onupdate=FetchedValue())
     user_name: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
 
 
@@ -516,7 +575,8 @@ class ObjectLog(Base):
         PrimaryKeyConstraint('id', name='PRIMARY'),
         Index('date', 'date'),
         Index('object_id', 'object_id'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='ObjectLog-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='ObjectLog-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
@@ -545,7 +605,8 @@ class PatchCableConnector(Base):
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
-    origin: Mapped[str] = mapped_column(mysql.ENUM('default', 'custom'), nullable=False, server_default=text("'custom'"))
+    origin: Mapped[str] = mapped_column(mysql.ENUM('default', 'custom'), nullable=False,
+                                        server_default=text("'custom'"))
     connector: Mapped[str] = mapped_column(mysql.CHAR(32), nullable=False)
 
 
@@ -554,8 +615,11 @@ class PatchCableConnectorCompat(Base):
     __table_args__ = (
         PrimaryKeyConstraint('pctype_id', 'connector_id', name='PRIMARY'),
         Index('connector_id', 'connector_id'),
-        ForeignKeyConstraint(['connector_id'], ['PatchCableConnector.id'], name='PatchCableConnectorCompat-FK-connector_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['pctype_id'], ['PatchCableType.id'], name='PatchCableConnectorCompat-FK-pctype_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['connector_id'], ['PatchCableConnector.id'],
+                             name='PatchCableConnectorCompat-FK-connector_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
+        ForeignKeyConstraint(['pctype_id'], ['PatchCableType.id'], name='PatchCableConnectorCompat-FK-pctype_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     pctype_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -568,16 +632,22 @@ class PatchCableHeap(Base):
         PrimaryKeyConstraint('id', name='PRIMARY'),
         Index('compat1', 'pctype_id', 'end1_conn_id'),
         Index('compat2', 'pctype_id', 'end2_conn_id'),
-        ForeignKeyConstraint(['pctype_id', 'end1_conn_id'], ['PatchCableConnectorCompat.pctype_id', 'PatchCableConnectorCompat.connector_id'], name='PatchCableHeap-FK-compat1', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['pctype_id', 'end2_conn_id'], ['PatchCableConnectorCompat.pctype_id', 'PatchCableConnectorCompat.connector_id'], name='PatchCableHeap-FK-compat2', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['pctype_id', 'end1_conn_id'],
+                             ['PatchCableConnectorCompat.pctype_id', 'PatchCableConnectorCompat.connector_id'],
+                             name='PatchCableHeap-FK-compat1', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['pctype_id', 'end2_conn_id'],
+                             ['PatchCableConnectorCompat.pctype_id', 'PatchCableConnectorCompat.connector_id'],
+                             name='PatchCableHeap-FK-compat2', onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
     pctype_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     end1_conn_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     end2_conn_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    amount: Mapped[int] = mapped_column(mysql.SMALLINT(display_width=5, unsigned=True), nullable=False, server_default=text('0'))
-    length: Mapped[Decimal] = mapped_column(mysql.DECIMAL(5, 2, unsigned=True), nullable=False, server_default=text('1.00'))
+    amount: Mapped[int] = mapped_column(mysql.SMALLINT(display_width=5, unsigned=True), nullable=False,
+                                        server_default=text('0'))
+    length: Mapped[Decimal] = mapped_column(mysql.DECIMAL(5, 2, unsigned=True), nullable=False,
+                                            server_default=text('1.00'))
     description: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
 
 
@@ -586,7 +656,8 @@ class PatchCableHeapLog(Base):
     __table_args__ = (
         PrimaryKeyConstraint('id', name='PRIMARY'),
         Index('heap_id-date', 'heap_id', 'date'),
-        ForeignKeyConstraint(['heap_id'], ['PatchCableHeap.id'], name='PatchCableHeapLog-FK-heap_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['heap_id'], ['PatchCableHeap.id'], name='PatchCableHeapLog-FK-heap_id',
+                             onupdate='RESTRICT', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
@@ -601,8 +672,10 @@ class PatchCableOIFCompat(Base):
     __table_args__ = (
         PrimaryKeyConstraint('pctype_id', 'oif_id', name='PRIMARY'),
         Index('oif_id', 'oif_id'),
-        ForeignKeyConstraint(['oif_id'], ['PortOuterInterface.id'], name='PatchCableOIFCompat-FK-oif_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['pctype_id'], ['PatchCableType.id'], name='PatchCableOIFCompat-FK-pctype_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['oif_id'], ['PortOuterInterface.id'], name='PatchCableOIFCompat-FK-oif_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['pctype_id'], ['PatchCableType.id'], name='PatchCableOIFCompat-FK-pctype_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     pctype_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -617,7 +690,8 @@ class PatchCableType(Base):
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
-    origin: Mapped[str] = mapped_column(mysql.ENUM('default', 'custom'), nullable=False, server_default=text("'custom'"))
+    origin: Mapped[str] = mapped_column(mysql.ENUM('default', 'custom'), nullable=False,
+                                        server_default=text("'custom'"))
     pctype: Mapped[str] = mapped_column(mysql.CHAR(64), nullable=False)
 
 
@@ -631,7 +705,8 @@ class Plugin(Base):
     longname: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
     version: Mapped[str] = mapped_column(mysql.CHAR(64), nullable=False)
     home_url: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    state: Mapped[str] = mapped_column(mysql.ENUM('disabled', 'enabled'), nullable=False, server_default=text("'disabled'"))
+    state: Mapped[str] = mapped_column(mysql.ENUM('disabled', 'enabled'), nullable=False,
+                                       server_default=text("'disabled'"))
 
 
 class Port(Base):
@@ -643,15 +718,19 @@ class Port(Base):
         Index('l2address', 'l2address'),
         UniqueConstraint('object_id', 'iif_id', 'type', 'name', name='object_iif_oif_name'),
         Index('type', 'type'),
-        ForeignKeyConstraint(['iif_id', 'type'], ['PortInterfaceCompat.iif_id', 'PortInterfaceCompat.oif_id'], name='Port-FK-iif-oif', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='Port-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['iif_id', 'type'], ['PortInterfaceCompat.iif_id', 'PortInterfaceCompat.oif_id'],
+                             name='Port-FK-iif-oif', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='Port-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
-    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                           server_default=text('0'))
     name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False, server_default=text("''"))
     iif_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    type: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    type: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                      server_default=text('0'))
     l2address: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
     reservation_comment: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
     label: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
@@ -662,13 +741,16 @@ class PortAllowedVLAN(Base):
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'port_name', 'vlan_id', name='PRIMARY'),
         Index('vlan_id', 'vlan_id'),
-        ForeignKeyConstraint(['object_id', 'port_name'], ['PortVLANMode.object_id', 'PortVLANMode.port_name'], name='PortAllowedVLAN-FK-object-port', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['vlan_id'], ['VLANValidID.vlan_id'], name='PortAllowedVLAN-FK-vlan_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id', 'port_name'], ['PortVLANMode.object_id', 'PortVLANMode.port_name'],
+                             name='PortAllowedVLAN-FK-object-port', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['vlan_id'], ['VLANValidID.vlan_id'], name='PortAllowedVLAN-FK-vlan_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     port_name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
 
 
 class PortCompat(Base):
@@ -676,12 +758,16 @@ class PortCompat(Base):
     __table_args__ = (
         UniqueConstraint('type1', 'type2', name='type1_2'),
         Index('type2', 'type2'),
-        ForeignKeyConstraint(['type1'], ['PortOuterInterface.id'], name='PortCompat-FK-oif_id1', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['type2'], ['PortOuterInterface.id'], name='PortCompat-FK-oif_id2', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['type1'], ['PortOuterInterface.id'], name='PortCompat-FK-oif_id1', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
+        ForeignKeyConstraint(['type2'], ['PortOuterInterface.id'], name='PortCompat-FK-oif_id2', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    type1: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    type2: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    type1: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                       server_default=text('0'))
+    type2: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                       server_default=text('0'))
     __mapper_args__ = {"primary_key": (type1, type2)}
 
 
@@ -701,8 +787,10 @@ class PortInterfaceCompat(Base):
     __table_args__ = (
         Index('PortInterfaceCompat-FK-oif_id', 'oif_id'),
         UniqueConstraint('iif_id', 'oif_id', name='pair'),
-        ForeignKeyConstraint(['iif_id'], ['PortInnerInterface.id'], name='PortInterfaceCompat-FK-iif_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['oif_id'], ['PortOuterInterface.id'], name='PortInterfaceCompat-FK-oif_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['iif_id'], ['PortInnerInterface.id'], name='PortInterfaceCompat-FK-iif_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['oif_id'], ['PortOuterInterface.id'], name='PortInterfaceCompat-FK-oif_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     iif_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -730,12 +818,15 @@ class PortNativeVLAN(Base):
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'port_name', 'vlan_id', name='PRIMARY'),
         UniqueConstraint('object_id', 'port_name', name='port_id'),
-        ForeignKeyConstraint(['object_id', 'port_name', 'vlan_id'], ['PortAllowedVLAN.object_id', 'PortAllowedVLAN.port_name', 'PortAllowedVLAN.vlan_id'], name='PortNativeVLAN-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id', 'port_name', 'vlan_id'],
+                             ['PortAllowedVLAN.object_id', 'PortAllowedVLAN.port_name', 'PortAllowedVLAN.vlan_id'],
+                             name='PortNativeVLAN-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     port_name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
 
 
 class PortOuterInterface(Base):
@@ -753,12 +844,14 @@ class PortVLANMode(Base):
     __tablename__ = 'PortVLANMode'
     __table_args__ = (
         PrimaryKeyConstraint('object_id', 'port_name', name='PRIMARY'),
-        ForeignKeyConstraint(['object_id', 'port_name'], ['CachedPVM.object_id', 'CachedPVM.port_name'], name='PortVLANMode-FK-object-port', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id', 'port_name'], ['CachedPVM.object_id', 'CachedPVM.port_name'],
+                             name='PortVLANMode-FK-object-port', onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     port_name: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    vlan_mode: Mapped[str] = mapped_column(mysql.ENUM('access', 'trunk'), nullable=False, server_default=text("'access'"))
+    vlan_mode: Mapped[str] = mapped_column(mysql.ENUM('access', 'trunk'), nullable=False,
+                                           server_default=text("'access'"))
 
 
 class RackSpace(Base):
@@ -766,13 +859,18 @@ class RackSpace(Base):
     __table_args__ = (
         PrimaryKeyConstraint('rack_id', 'unit_no', 'atom', name='PRIMARY'),
         Index('RackSpace_object_id', 'object_id'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='RackSpace-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['rack_id'], ['Object.id'], name='RackSpace-FK-rack_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='RackSpace-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['rack_id'], ['Object.id'], name='RackSpace-FK-rack_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    rack_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    unit_no: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    atom: Mapped[str] = mapped_column(mysql.ENUM('front', 'interior', 'rear'), nullable=False, server_default=text("'interior'"))
+    rack_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
+    unit_no: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
+    atom: Mapped[str] = mapped_column(mysql.ENUM('front', 'interior', 'rear'), nullable=False,
+                                      server_default=text("'interior'"))
     state: Mapped[str] = mapped_column(mysql.ENUM('A', 'U', 'T'), nullable=False, server_default=text("'A'"))
     object_id: Mapped[int | None] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=True)
 
@@ -781,7 +879,8 @@ class RackThumbnail(Base):
     __tablename__ = 'RackThumbnail'
     __table_args__ = (
         UniqueConstraint('rack_id', name='rack_id'),
-        ForeignKeyConstraint(['rack_id'], ['Object.id'], name='RackThumbnail-FK-rack_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['rack_id'], ['Object.id'], name='RackThumbnail-FK-rack_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     rack_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -806,13 +905,18 @@ class TagStorage(Base):
         Index('entity_id', 'entity_id'),
         UniqueConstraint('entity_realm', 'entity_id', 'tag_id', name='entity_tag'),
         Index('tag_id-tag_is_assignable', 'tag_id', 'tag_is_assignable'),
-        ForeignKeyConstraint(['tag_id', 'tag_is_assignable'], ['TagTree.id', 'TagTree.is_assignable'], name='TagStorage-FK-TagTree', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['tag_id', 'tag_is_assignable'], ['TagTree.id', 'TagTree.is_assignable'],
+                             name='TagStorage-FK-TagTree', onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    entity_realm: Mapped[str] = mapped_column(mysql.ENUM('file', 'ipv4net', 'ipv4rspool', 'ipv4vs', 'ipvs', 'ipv6net', 'location', 'object', 'rack', 'user', 'vst'), nullable=False, server_default=text("'object'"))
+    entity_realm: Mapped[str] = mapped_column(
+        mysql.ENUM('file', 'ipv4net', 'ipv4rspool', 'ipv4vs', 'ipvs', 'ipv6net', 'location', 'object', 'rack', 'user',
+                   'vst'), nullable=False, server_default=text("'object'"))
     entity_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    tag_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    tag_is_assignable: Mapped[str] = mapped_column(mysql.ENUM('yes', 'no'), nullable=False, server_default=text("'yes'"))
+    tag_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                        server_default=text('0'))
+    tag_is_assignable: Mapped[str] = mapped_column(mysql.ENUM('yes', 'no'), nullable=False,
+                                                   server_default=text("'yes'"))
     user: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
     date: Mapped[datetime | None] = mapped_column(mysql.DATETIME(), nullable=True)
     __mapper_args__ = {"primary_key": (entity_realm, entity_id, tag_id)}
@@ -825,7 +929,8 @@ class TagTree(Base):
         Index('TagTree-K-parent_id', 'parent_id'),
         Index('id-is_assignable', 'id', 'is_assignable'),
         UniqueConstraint('tag', name='tag'),
-        ForeignKeyConstraint(['parent_id'], ['TagTree.id'], name='TagTree-K-parent_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['parent_id'], ['TagTree.id'], name='TagTree-K-parent_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
@@ -843,7 +948,8 @@ class UserAccount(Base):
         UniqueConstraint('user_name', name='user_name'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    user_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         autoincrement=True)
     user_name: Mapped[str] = mapped_column(mysql.CHAR(64), nullable=False, server_default=text("''"))
     user_password_hash: Mapped[str | None] = mapped_column(mysql.CHAR(40), nullable=True)
     user_realname: Mapped[str | None] = mapped_column(mysql.CHAR(64), nullable=True)
@@ -854,7 +960,8 @@ class UserConfig(Base):
     __table_args__ = (
         UniqueConstraint('user', 'varname', name='user_varname'),
         Index('varname', 'varname'),
-        ForeignKeyConstraint(['varname'], ['Config.varname'], name='UserConfig-FK-varname', onupdate='CASCADE', ondelete='CASCADE'),
+        ForeignKeyConstraint(['varname'], ['Config.varname'], name='UserConfig-FK-varname', onupdate='CASCADE',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     varname: Mapped[str] = mapped_column(mysql.CHAR(32), nullable=False)
@@ -868,13 +975,17 @@ class VLANDescription(Base):
     __table_args__ = (
         PrimaryKeyConstraint('domain_id', 'vlan_id', name='PRIMARY'),
         Index('vlan_id', 'vlan_id'),
-        ForeignKeyConstraint(['domain_id'], ['VLANDomain.id'], name='VLANDescription-FK-domain_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['vlan_id'], ['VLANValidID.vlan_id'], name='VLANDescription-FK-vlan_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['domain_id'], ['VLANDomain.id'], name='VLANDescription-FK-domain_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['vlan_id'], ['VLANValidID.vlan_id'], name='VLANDescription-FK-vlan_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     domain_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    vlan_type: Mapped[str] = mapped_column(mysql.ENUM('ondemand', 'compulsory', 'alien'), nullable=False, server_default=text("'ondemand'"))
+    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('0'))
+    vlan_type: Mapped[str] = mapped_column(mysql.ENUM('ondemand', 'compulsory', 'alien'), nullable=False,
+                                           server_default=text("'ondemand'"))
     vlan_descr: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
 
 
@@ -884,7 +995,8 @@ class VLANDomain(Base):
         PrimaryKeyConstraint('id', name='PRIMARY'),
         Index('VLANDomain-FK-group_id', 'group_id'),
         UniqueConstraint('description', name='description'),
-        ForeignKeyConstraint(['group_id'], ['VLANDomain.id'], name='VLANDomain-FK-group_id', onupdate='RESTRICT', ondelete='SET NULL'),
+        ForeignKeyConstraint(['group_id'], ['VLANDomain.id'], name='VLANDomain-FK-group_id', onupdate='RESTRICT',
+                             ondelete='SET NULL'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, autoincrement=True)
@@ -897,8 +1009,10 @@ class VLANIPv4(Base):
     __table_args__ = (
         Index('VLANIPv4-FK-compound', 'domain_id', 'vlan_id'),
         UniqueConstraint('ipv4net_id', 'domain_id', 'vlan_id', name='network-domain-vlan'),
-        ForeignKeyConstraint(['domain_id', 'vlan_id'], ['VLANDescription.domain_id', 'VLANDescription.vlan_id'], name='VLANIPv4-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['ipv4net_id'], ['IPv4Network.id'], name='VLANIPv4-FK-ipv4net_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['domain_id', 'vlan_id'], ['VLANDescription.domain_id', 'VLANDescription.vlan_id'],
+                             name='VLANIPv4-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['ipv4net_id'], ['IPv4Network.id'], name='VLANIPv4-FK-ipv4net_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     domain_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -912,8 +1026,10 @@ class VLANIPv6(Base):
     __table_args__ = (
         Index('VLANIPv6-FK-compound', 'domain_id', 'vlan_id'),
         UniqueConstraint('ipv6net_id', 'domain_id', 'vlan_id', name='network-domain-vlan'),
-        ForeignKeyConstraint(['domain_id', 'vlan_id'], ['VLANDescription.domain_id', 'VLANDescription.vlan_id'], name='VLANIPv6-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['ipv6net_id'], ['IPv6Network.id'], name='VLANIPv6-FK-ipv6net_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['domain_id', 'vlan_id'], ['VLANDescription.domain_id', 'VLANDescription.vlan_id'],
+                             name='VLANIPv6-FK-compound', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['ipv6net_id'], ['IPv6Network.id'], name='VLANIPv6-FK-ipv6net_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     domain_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -926,13 +1042,15 @@ class VLANSTRule(Base):
     __tablename__ = 'VLANSTRule'
     __table_args__ = (
         UniqueConstraint('vst_id', 'rule_no', name='vst-rule'),
-        ForeignKeyConstraint(['vst_id'], ['VLANSwitchTemplate.id'], name='VLANSTRule-FK-vst_id', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['vst_id'], ['VLANSwitchTemplate.id'], name='VLANSTRule-FK-vst_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     vst_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     rule_no: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     port_pcre: Mapped[str] = mapped_column(mysql.CHAR(255), nullable=False)
-    port_role: Mapped[str] = mapped_column(mysql.ENUM('access', 'trunk', 'anymode', 'uplink', 'downlink', 'none'), nullable=False, server_default=text("'none'"))
+    port_role: Mapped[str] = mapped_column(mysql.ENUM('access', 'trunk', 'anymode', 'uplink', 'downlink', 'none'),
+                                           nullable=False, server_default=text("'none'"))
     wrt_vlans: Mapped[str | None] = mapped_column(mysql.TEXT(), nullable=True)
     description: Mapped[str | None] = mapped_column(mysql.CHAR(255), nullable=True)
     __mapper_args__ = {"primary_key": (vst_id, rule_no)}
@@ -946,21 +1064,30 @@ class VLANSwitch(Base):
         UniqueConstraint('object_id', name='object_id'),
         Index('out_of_sync', 'out_of_sync'),
         Index('template_id', 'template_id'),
-        ForeignKeyConstraint(['domain_id'], ['VLANDomain.id'], name='VLANSwitch-FK-domain_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='VLANSwitch-FK-object_id', onupdate='RESTRICT', ondelete='RESTRICT'),
-        ForeignKeyConstraint(['template_id'], ['VLANSwitchTemplate.id'], name='VLANSwitch-FK-template_id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        ForeignKeyConstraint(['domain_id'], ['VLANDomain.id'], name='VLANSwitch-FK-domain_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='VLANSwitch-FK-object_id', onupdate='RESTRICT',
+                             ondelete='RESTRICT'),
+        ForeignKeyConstraint(['template_id'], ['VLANSwitchTemplate.id'], name='VLANSwitch-FK-template_id',
+                             onupdate='RESTRICT', ondelete='RESTRICT'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     domain_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
     template_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
-    mutex_rev: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
+    mutex_rev: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                           server_default=text('0'))
     out_of_sync: Mapped[str] = mapped_column(mysql.ENUM('yes', 'no'), nullable=False, server_default=text("'yes'"))
-    last_errno: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('0'))
-    last_change: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False, server_default=text("'0000-00-00 00:00:00'"))
-    last_push_started: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False, server_default=text("'0000-00-00 00:00:00'"))
-    last_push_finished: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False, server_default=text("'0000-00-00 00:00:00'"))
-    last_error_ts: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False, server_default=text("'0000-00-00 00:00:00'"))
+    last_errno: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                            server_default=text('0'))
+    last_change: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False,
+                                                  server_default=text("'0000-00-00 00:00:00'"))
+    last_push_started: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False,
+                                                        server_default=text("'0000-00-00 00:00:00'"))
+    last_push_finished: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False,
+                                                         server_default=text("'0000-00-00 00:00:00'"))
+    last_error_ts: Mapped[datetime] = mapped_column(mysql.TIMESTAMP(), nullable=False,
+                                                    server_default=text("'0000-00-00 00:00:00'"))
     __mapper_args__ = {"primary_key": (object_id,)}
 
 
@@ -983,7 +1110,8 @@ class VLANValidID(Base):
         PrimaryKeyConstraint('vlan_id', name='PRIMARY'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
-    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False, server_default=text('1'))
+    vlan_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False,
+                                         server_default=text('1'))
 
 
 class VS(Base):
@@ -1005,9 +1133,12 @@ class VSEnabledIPs(Base):
         Index('VSEnabledIPs-FK-rspool_id', 'rspool_id'),
         Index('VSEnabledIPs-FK-vs_id-vip', 'vs_id', 'vip'),
         Index('vip', 'vip'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='VSEnabledIPs-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='VSEnabledIPs-FK-rspool_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['vs_id', 'vip'], ['VSIPs.vs_id', 'VSIPs.vip'], name='VSEnabledIPs-FK-vs_id-vip', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='VSEnabledIPs-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='VSEnabledIPs-FK-rspool_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['vs_id', 'vip'], ['VSIPs.vs_id', 'VSIPs.vip'], name='VSEnabledIPs-FK-vs_id-vip',
+                             onupdate='RESTRICT', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
@@ -1025,9 +1156,12 @@ class VSEnabledPorts(Base):
         PrimaryKeyConstraint('object_id', 'vs_id', 'proto', 'vport', 'rspool_id', name='PRIMARY'),
         Index('VSEnabledPorts-FK-rspool_id', 'rspool_id'),
         Index('VSEnabledPorts-FK-vs_id-proto-vport', 'vs_id', 'proto', 'vport'),
-        ForeignKeyConstraint(['object_id'], ['Object.id'], name='VSEnabledPorts-FK-object_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='VSEnabledPorts-FK-rspool_id', onupdate='RESTRICT', ondelete='CASCADE'),
-        ForeignKeyConstraint(['vs_id', 'proto', 'vport'], ['VSPorts.vs_id', 'VSPorts.proto', 'VSPorts.vport'], name='VSEnabledPorts-FK-vs_id-proto-vport', onupdate='RESTRICT', ondelete='CASCADE'),
+        ForeignKeyConstraint(['object_id'], ['Object.id'], name='VSEnabledPorts-FK-object_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['rspool_id'], ['IPv4RSPool.id'], name='VSEnabledPorts-FK-rspool_id', onupdate='RESTRICT',
+                             ondelete='CASCADE'),
+        ForeignKeyConstraint(['vs_id', 'proto', 'vport'], ['VSPorts.vs_id', 'VSPorts.proto', 'VSPorts.vport'],
+                             name='VSEnabledPorts-FK-vs_id-proto-vport', onupdate='RESTRICT', ondelete='CASCADE'),
         {'mysql_engine': 'InnoDB', 'mysql_collate': 'utf8mb3_unicode_ci', 'mysql_row_format': 'Dynamic'},
     )
     object_id: Mapped[int] = mapped_column(mysql.INTEGER(display_width=10, unsigned=True), nullable=False)
