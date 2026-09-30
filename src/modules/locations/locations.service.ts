@@ -5,6 +5,10 @@ import {
   LocationOutput,
   LocationUpdateInput,
 } from "./entity/locations.entity.js";
+import {
+  LocationHasRowsError,
+  LocationNotFoundError,
+} from "./errors/locations.errors.js";
 
 export class LocationsService {
   constructor(private readonly locationRepository: LocationsRepository) {}
@@ -20,13 +24,15 @@ export class LocationsService {
   }
 
   async delete(id: IDLocationDTO): Promise<void> {
-    const location = await this.locationRepository.delete(id);
+    const result = await this.locationRepository.delete(id);
 
-    if (location == null) {
-      throw new Error("It was not possible to delete the location.");
+    if (result.status === "not_found") {
+      throw new LocationNotFoundError(id);
     }
 
-    return location;
+    if (result.status === "has_rows") {
+      throw new LocationHasRowsError(id);
+    }
   }
 
   async updateLocation(data: LocationUpdateInput): Promise<LocationOutput> {

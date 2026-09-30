@@ -8,8 +8,10 @@ export type LocationUpdateInput = LocationInput & {
   id: number;
 };
 
-export type LocationOutput = ObjectEntity ;
+export type LocationOutput = ObjectEntity;
 
+export type LocationDeleteResult =
+  { status: "deleted" } | { status: "not_found" } | { status: "has_rows" };
 
 /*
 Quando a API cria uma row, ela executa:

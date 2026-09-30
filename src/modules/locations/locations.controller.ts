@@ -1,11 +1,11 @@
+import type { FastifyReply, FastifyRequest } from "fastify";
 import { LocationsService } from "./locations.service.js";
 import {
   CreateLocationSchema,
   UpdateLocationSchema,
 } from "./dto/locations.dto.js";
 import { ObjectIdParamsSchema } from "../../shared/schemas/object.schema.js";
-import { FastifyReply, FastifyRequest } from "fastify";
-import { LocationOutput } from "./entity/locations.entity.js";
+import * as repl from "node:repl";
 
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
@@ -13,7 +13,7 @@ export class LocationsController {
   async create(
     request: FastifyRequest,
     reply: FastifyReply,
-  ): Promise<LocationOutput | null> {
+  ): Promise<FastifyReply> {
     const result = CreateLocationSchema.safeParse(request.body);
 
     if (!result.success) {
@@ -22,10 +22,15 @@ export class LocationsController {
         errors: result.error.issues,
       });
     }
-    return await this.locationsService.create(result.data);
+    const location = await this.locationsService.create(result.data);
+
+    return reply.status(201).send(location);
   }
 
-  async delete(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  async delete(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> {
     const result = ObjectIdParamsSchema.safeParse(request.params);
 
     if (!result.success) {
@@ -35,13 +40,15 @@ export class LocationsController {
       });
     }
 
-    return this.locationsService.delete(result.data.id);
+    await this.locationsService.delete(result.data.id);
+
+    return reply.status(204).send();
   }
 
   async update(
     request: FastifyRequest,
     reply: FastifyReply,
-  ): Promise<LocationOutput | void> {
+  ): Promise<FastifyReply> {
     const paramsResult = ObjectIdParamsSchema.safeParse(request.params);
     const bodyResult = UpdateLocationSchema.safeParse(request.body);
 
@@ -59,16 +66,18 @@ export class LocationsController {
       });
     }
 
-    return this.locationsService.updateLocation({
+    const location = await this.locationsService.updateLocation({
       id: paramsResult.data.id,
       name: bodyResult.data.name,
     });
+
+    return reply.status(201).send(location);
   }
 
   async get(
     request: FastifyRequest,
     reply: FastifyReply,
-  ): Promise<LocationOutput> {
+  ): Promise<FastifyReply> {
     const params = ObjectIdParamsSchema.safeParse(request.params);
 
     if (!params.success) {
@@ -86,7 +95,7 @@ export class LocationsController {
   async getAll(
     request: FastifyRequest,
     reply: FastifyReply,
-  ): Promise<LocationOutput[]> {
+  ): Promise<FastifyReply[]> {
     const data = await this.locationsService.getAllLocations();
 
     return reply.status(200).send(data);
