@@ -381,6 +381,7 @@ model Object {
   @@unique([id, objtype_id])
   @@index([id, objtype_id], map: "id-tid")
   @@index([objtype_id, id], map: "type_id")
+  @@index([objtype_id, name(length: 191)], map: "object_type_name")
 }
 
 model ObjectHistory {

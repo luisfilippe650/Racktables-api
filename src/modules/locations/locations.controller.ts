@@ -22,7 +22,6 @@ export class LocationsController {
         errors: result.error.issues,
       });
     }
-
     return await this.locationsService.create(result.data);
   }
 
