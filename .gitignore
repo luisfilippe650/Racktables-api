@@ -1,31 +1,23 @@
-# Environment files
+# Local configuration
 .env
 .env.*
 !.env.example
+/.agents/
+/.codex/
+/.idea/
+/.vscode/
 
-# Node.js dependencies
-node_modules/
+# Dependencies and generated files
+/node_modules/
+/dist/
+/build/
+/coverage/
+/src/generated/prisma/
+*.tsbuildinfo
+.eslintcache
 
-# IDEs
-.idea/
-.vscode/
-
-# Logs
+# Logs and temporary files
 *.log
-
-# OS
+*.pid
 .DS_Store
 Thumbs.db
-
-# Build / cache
-dist/
-build/
-coverage/
-.eslintcache
-*.tsbuildinfo
-
-# Docker
-*.pid
-
-# Generated Prisma Client
-/src/generated/prisma/

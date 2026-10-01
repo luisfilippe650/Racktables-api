@@ -1,28 +1,23 @@
-# Git
-.git
-../.gitignore
-
-# Virtual environment
-.venv
-venv
-env
-
-# Python cache
-__pycache__
-*.pyc
-*.pyo
-
-# Env file (NUNCA subir pro container direto)
-.env.example
+/.git
+/.agents
+/.codex
+/.idea
+/.vscode
+/node_modules
+/dist
+/build
+/coverage
+/src/generated
 .env
-
-# IDE
-.idea
-.vscode
-
-# Logs
+.env.*
 *.log
-
-# OS
+*.pid
+*.tsbuildinfo
+.eslintcache
 .DS_Store
 Thumbs.db
+/docs
+/tests
+README*.md
+skills-lock.json
+dictionary_export.txt
