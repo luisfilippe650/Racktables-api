@@ -1,14 +1,12 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { ObjectIdParamsSchema } from "../../shared/schemas/object.schema.js";
-import { RowNameSchema } from "./dto/rows.dto.js";
+import { RowNameQuerySchema } from "./dto/rows.dto.js";
 import {
   RowLocationParamsSchema,
   RowSchema,
   UpdateRowSchema,
 } from "./dto/rows.dto.js";
 import { RowService } from "./rows.service.js";
-import { Row } from "../../generated/prisma/client.js";
-import { RowOutput } from "./entity/rows.entity.js";
 
 export class RowsController {
   constructor(private readonly rowService: RowService) {}
@@ -117,7 +115,10 @@ export class RowsController {
     return reply.status(204).send();
   }
 
-  async get( request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+  async get(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> {
     const params = ObjectIdParamsSchema.safeParse(request.params);
 
     if (!params.success) {
@@ -132,8 +133,11 @@ export class RowsController {
     return reply.status(200).send(row);
   }
 
-  async getByName(request: FastifyRequest, reply : FastifyReply):Promise<FastifyReply> {
-    const params = RowNameSchema.safeParse(request.params);
+  async getByName(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> {
+    const params = RowNameQuerySchema.safeParse(request.query);
 
     if (!params.success) {
       return reply.status(400).send({
@@ -142,13 +146,15 @@ export class RowsController {
       });
     }
 
-    const row = await this.rowService.getByName(params.data);
+    const row = await this.rowService.getByName(params.data.name);
 
     return reply.status(200).send(row);
   }
 
-  async getAll(request: FastifyRequest , reply: FastifyReply): Promise<FastifyReply[]> {
-
+  async getAll(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> {
     const rows = await this.rowService.getAll();
 
     return reply.status(200).send(rows);

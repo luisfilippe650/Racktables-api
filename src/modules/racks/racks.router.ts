@@ -8,32 +8,32 @@ const controller = new RacksController(
 );
 
 export async function racksRouter(app: FastifyInstance): Promise<void> {
-  app.post("/rack", (request, reply) => controller.create(request, reply));
-  app.patch("/rack/:id", (request, reply) => controller.update(request, reply));
-  app.delete("/rack/:id", (request, reply) =>
+  app.post("/rack", { schema: { tags: ["Racks"] } }, (request, reply) => controller.create(request, reply));
+  app.patch("/rack/:id", { schema: { tags: ["Racks"] } }, (request, reply) => controller.update(request, reply));
+  app.delete("/rack/:id", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.delete(request, reply),
   );
-  app.get("/rack/:id", (request, reply) => controller.get(request, reply));
-  app.get("/racks", (request, reply) => controller.getAll(request, reply));
-  app.get("/rack/by-name", (request, reply) =>
+  app.get("/rack/:id", { schema: { tags: ["Racks"] } }, (request, reply) => controller.get(request, reply));
+  app.get("/racks", { schema: { tags: ["Racks"] } }, (request, reply) => controller.getAll(request, reply));
+  app.get("/rack/by-name", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.getByName(request, reply),
   );
-  app.get("/rack/:id/details", (request, reply) =>
+  app.get("/rack/:id/details", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.getDetails(request, reply),
   );
-  app.get("/rack/:id/occupancy", (request, reply) =>
+  app.get("/rack/:id/occupancy", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.getOccupancy(request, reply),
   );
-  app.get("/racks/occupancy", (request, reply) =>
+  app.get("/racks/occupancy", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.getOccupancyAll(request, reply),
   );
-  app.get("/rack/:id/spaces", (request, reply) =>
+  app.get("/rack/:id/spaces", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.getSpaces(request, reply),
   );
-  app.get("/rack/:rackId/spaces/:unitNo/:atom", (request, reply) =>
+  app.get("/rack/:rackId/spaces/:unitNo/:atom", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.getSpace(request, reply),
   );
-  app.get("/rack/:rackId/objects/:objectId/spaces", (request, reply) =>
+  app.get("/rack/:rackId/objects/:objectId/spaces", { schema: { tags: ["Racks"] } }, (request, reply) =>
     controller.getObjectSpaces(request, reply),
   );
 }

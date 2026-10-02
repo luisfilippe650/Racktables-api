@@ -74,7 +74,7 @@ test("malformed JSON receives a parser error with status 400 rather than an inte
   t.after(() => app.close());
   const response = await app.inject({
     method: "POST",
-    url: "/object",
+    url: "/v1/racktables/object",
     headers: { "content-type": "application/json" },
     payload: "{",
   });
@@ -87,7 +87,7 @@ test("unsupported content types and oversized bodies keep their Fastify statuses
   t.after(() => app.close());
   const unsupported = await app.inject({
     method: "POST",
-    url: "/object",
+    url: "/v1/racktables/object",
     headers: { "content-type": "application/xml" },
     payload: "<object/>",
   });
@@ -95,7 +95,7 @@ test("unsupported content types and oversized bodies keep their Fastify statuses
   assert.equal(unsupported.json().code, "FST_ERR_CTP_INVALID_MEDIA_TYPE");
   const oversized = await app.inject({
     method: "POST",
-    url: "/object",
+    url: "/v1/racktables/object",
     payload: { name: "a".repeat(100), objtype_id: 4 },
   });
   assert.equal(oversized.statusCode, 413);

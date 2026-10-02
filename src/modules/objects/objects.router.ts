@@ -14,51 +14,51 @@ export async function objectsRouter(
     new ObjectsService(options.repository ?? new ObjectsPrismaRepository()),
   );
 
-  app.post("/object", (request, reply) => controller.create(request, reply));
+  app.post("/object", { schema: { tags: ["Objects"] } }, (request, reply) => controller.create(request, reply));
 
-  app.patch("/object/:id", (request, reply) =>
+  app.patch("/object/:id", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.update(request, reply),
   );
 
-  app.delete("/object/:id", (request, reply) =>
+  app.delete("/object/:id", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.delete(request, reply),
   );
 
-  app.get("/object/:id", (request, reply) => controller.get(request, reply));
+  app.get("/object/:id", { schema: { tags: ["Objects"] } }, (request, reply) => controller.get(request, reply));
 
-  app.get("/object/by-name", (request, reply) =>
+  app.get("/object/by-name", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.getByName(request, reply),
   );
 
-  app.get("/object/by-service-tag", (request, reply) =>
+  app.get("/object/by-service-tag", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.getByServiceTag(request, reply),
   );
 
-  app.get("/objects", (request, reply) => controller.getAll(request, reply));
+  app.get("/objects", { schema: { tags: ["Objects"] } }, (request, reply) => controller.getAll(request, reply));
 
-  app.get("/objects/all", (request, reply) =>
+  app.get("/objects/all", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.getAllObjects(request, reply),
   );
 
-  app.get("/objects/types", (request, reply) =>
+  app.get("/objects/types", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.getTypes(request, reply),
   );
 
-  app.get("/object/:id/summary", (request, reply) =>
+  app.get("/object/:id/summary", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.getSummary(request, reply),
   );
 
-  app.get("/objects/dictionary/:chapter_id", (request, reply) =>
+  app.get("/objects/dictionary/:chapter_id", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.getDictionaryOptions(request, reply),
   );
 
-  app.post("/object/mount", (request, reply) =>
+  app.post("/object/mount", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.mount(request, reply),
   );
 
-  app.delete("/object/:id/mount", (request, reply) =>
+  app.delete("/object/:id/mount", { schema: { tags: ["Objects"] } }, (request, reply) =>
     controller.unmount(request, reply),
   );
 
-  app.post("/object/move", (request, reply) => controller.move(request, reply));
+  app.post("/object/move", { schema: { tags: ["Objects"] } }, (request, reply) => controller.move(request, reply));
 }

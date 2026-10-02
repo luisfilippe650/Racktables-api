@@ -9,6 +9,8 @@ export const RowNameSchema = z
   .trim()
   .pipe(ObjectFieldsSchema.shape.name);
 
+export const RowNameQuerySchema = z.object({ name: RowNameSchema }).strict();
+
 export const RowSchema = z
   .object({
     name: RowNameSchema,

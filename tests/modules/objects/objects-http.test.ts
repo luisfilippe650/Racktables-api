@@ -345,12 +345,15 @@ test("buildApp registers objects routes alongside racks", async (t) => {
   t.after(() => app.close());
   const create = await app.inject({
     method: "POST",
-    url: "/object",
+    url: "/v1/racktables/object",
     payload: {},
   });
-  const list = await app.inject("/objects?per_page=101");
+  const list = await app.inject("/v1/racktables/objects?per_page=101");
   assert.equal(create.statusCode, 400);
   assert.equal(create.json().code, "INVALID_OBJECT_INPUT");
   assert.equal(list.statusCode, 400);
-  assert.equal(app.hasRoute({ method: "GET", url: "/racks" }), true);
+  assert.equal(
+    app.hasRoute({ method: "GET", url: "/v1/racktables/racks" }),
+    true,
+  );
 });
