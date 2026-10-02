@@ -18,3 +18,16 @@ export class LocationHasRowsError extends ApplicationError {
     );
   }
 }
+
+export class LocationNameConflictError extends ApplicationError {
+  constructor(locationName: string) {
+    super(
+      "LOCATION_NAME_CONFLICT",
+      409,
+      `Location ${locationName} already exists.`,
+      { locationName },
+    );
+  }
+}
+
+export { DatabaseOperationError } from "../../../shared/errors/database-operation.error.js";

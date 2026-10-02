@@ -1,4 +1,11 @@
+import { validate } from "../../shared/validation/validate.js";
+import { ObjectIdSchema } from "../../shared/schemas/object.schema.js";
 import {
+  RowSchema,
+  RowNameSchema,
+  RowWithLocationSchema,
+  UpdateRowSchema,
+  RowLocationParamsSchema,
   RowDTO,
   RowNameDTO,
   RowWithLocationDTO,
@@ -20,6 +27,7 @@ export class RowService {
   constructor(private readonly rowRepository: RowRepository) {}
 
   async create(data: RowDTO): Promise<RowOutput> {
+    data = validate(RowSchema, data);
     const result = await this.rowRepository.create(data);
 
     if (result.status === "name_conflict") {
@@ -30,6 +38,7 @@ export class RowService {
   }
 
   async createWithLocation(data: RowWithLocationDTO): Promise<RowOutput> {
+    data = validate(RowWithLocationSchema, data);
     const result = await this.rowRepository.createWithLocation(data);
 
     if (result.status === "location_not_found") {
@@ -44,6 +53,7 @@ export class RowService {
   }
 
   async delete(id: number): Promise<void> {
+    id = validate(ObjectIdSchema, id);
     const result = await this.rowRepository.delete(id);
 
     if (result.status === "not_found") {
@@ -56,6 +66,8 @@ export class RowService {
   }
 
   async update(id: number, data: UpdateRowDTO): Promise<RowOutput> {
+    id = validate(ObjectIdSchema, id);
+    data = validate(UpdateRowSchema, data);
     const result = await this.rowRepository.update({
       id,
       name: data.name,
@@ -73,6 +85,10 @@ export class RowService {
   }
 
   async linkToLocation(rowId: number, locationId: number): Promise<void> {
+    ({ rowId, locationId } = validate(RowLocationParamsSchema, {
+      rowId,
+      locationId,
+    }));
     const result = await this.rowRepository.linkToLocation(rowId, locationId);
 
     switch (result.status) {
@@ -93,6 +109,10 @@ export class RowService {
   }
 
   async unlinkFromLocation(rowId: number, locationId: number): Promise<void> {
+    ({ rowId, locationId } = validate(RowLocationParamsSchema, {
+      rowId,
+      locationId,
+    }));
     const result = await this.rowRepository.unlinkFromLocation(
       rowId,
       locationId,
@@ -113,6 +133,7 @@ export class RowService {
   }
 
   async get(id: number): Promise<RowOutput> {
+    id = validate(ObjectIdSchema, id);
     const row = await this.rowRepository.get(id);
 
     if (row === null) {
@@ -123,7 +144,7 @@ export class RowService {
   }
 
   async getByName(name: RowNameDTO): Promise<RowOutput | null> {
-    return this.rowRepository.getByName(name);
+    return this.rowRepository.getByName(validate(RowNameSchema, name));
   }
 
   async getAll(): Promise<RowOutput[]> {

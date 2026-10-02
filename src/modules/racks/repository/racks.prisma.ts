@@ -1,3 +1,14 @@
+import { validate } from "../../../shared/validation/validate.js";
+import {
+  RacksSchema,
+  UpdateRackInputSchema,
+  RackIdSchema,
+  RackNameSchema,
+  RackActorSchema,
+  RackListQuerySchema,
+  RackSpaceParamsSchema,
+  RackObjectSpacesParamsSchema,
+} from "../dto/racks.dto.js";
 import { Prisma } from "../../../database/prisma.js";
 import type { Prisma as PrismaTypes } from "../../../generated/prisma/client.js";
 import { OBJECT_TYPES } from "../../../shared/object-types.js";
@@ -16,29 +27,16 @@ import type {
   RackUpdate,
   RackUpdateResult,
 } from "../entity/racks.entity.js";
-import { DatabaseOperationError } from "../errors/racks.errors.js";
+import {
+  executeDatabaseOperation,
+  waitBeforeRetry,
+  type RetryDelay,
+} from "../../../shared/database/execute-database-operation.js";
 import { DEFAULT_RACK_HEIGHT } from "../racks.constants.js";
 import { RacksRepository } from "./racks.repository.js";
 
 const RACK_HEIGHT_ATTRIBUTE_ID = 27;
 const RACK_SORT_ORDER_ATTRIBUTE_ID = 29;
-
-const MAX_TRANSACTION_ATTEMPTS = 3;
-const INITIAL_TRANSACTION_RETRY_DELAY_MS = 25;
-
-type RetryDelay = (delayMs: number) => Promise<void>;
-
-const waitBeforeRetry: RetryDelay = (delayMs) =>
-  new Promise((resolve) => setTimeout(resolve, delayMs));
-
-function isTransactionConflict(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "P2034"
-  );
-}
 
 const spaceSelect = {
   rack_id: true,
@@ -66,35 +64,17 @@ export class RacksPrismaRepository extends RacksRepository {
     super();
   }
 
-  private async executeDatabaseOperation<T>(
-    operation: () => Promise<T>,
-  ): Promise<T> {
-    for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
-      try {
-        return await operation();
-      } catch (error) {
-        if (
-          isTransactionConflict(error) &&
-          attempt < MAX_TRANSACTION_ATTEMPTS
-        ) {
-          await this.retryDelay(
-            INITIAL_TRANSACTION_RETRY_DELAY_MS * 2 ** (attempt - 1),
-          );
-          continue;
-        }
-        throw new DatabaseOperationError(error);
-      }
-    }
-
-    throw new DatabaseOperationError(
-      new Error("Database operation exhausted all retry attempts."),
-    );
+  private executeDatabaseOperation<T>(operation: () => Promise<T>): Promise<T> {
+    return executeDatabaseOperation(operation, this.retryDelay);
   }
 
   async create(
     data: RackInput,
     actor: string | null = null,
   ): Promise<RackCreateResult> {
+    data = validate(RacksSchema, data);
+    actor = validate(RackActorSchema, actor);
+
     // Execute the transaction with retry handling for serialization conflicts.
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
@@ -211,6 +191,9 @@ export class RacksPrismaRepository extends RacksRepository {
     data: RackUpdate,
     actor: string | null = null,
   ): Promise<RackUpdateResult> {
+    data = validate(UpdateRackInputSchema, data);
+    actor = validate(RackActorSchema, actor);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -243,6 +226,8 @@ export class RacksPrismaRepository extends RacksRepository {
   }
 
   async delete(id: number): Promise<RackDeleteResult> {
+    id = validate(RackIdSchema, id);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -299,6 +284,8 @@ export class RacksPrismaRepository extends RacksRepository {
   }
 
   async get(id: number): Promise<RackOutput | null> {
+    id = validate(RackIdSchema, id);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.object.findFirst({
         where: { id, objtype_id: OBJECT_TYPES.RACK },
@@ -307,6 +294,8 @@ export class RacksPrismaRepository extends RacksRepository {
   }
 
   async getByName(name: string): Promise<RackOutput | null> {
+    name = validate(RackNameSchema, name);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.object.findFirst({
         where: { name, objtype_id: OBJECT_TYPES.RACK },
@@ -317,6 +306,8 @@ export class RacksPrismaRepository extends RacksRepository {
   async getAll(
     pagination: RackPagination = { page: 1, per_page: 50 },
   ): Promise<RackPage<RackOutput>> {
+    pagination = validate(RackListQuerySchema, pagination);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -338,6 +329,8 @@ export class RacksPrismaRepository extends RacksRepository {
   }
 
   async getDetails(rackId: number): Promise<RackDetailsOutput | null> {
+    rackId = validate(RackIdSchema, rackId);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -447,6 +440,8 @@ export class RacksPrismaRepository extends RacksRepository {
   }
 
   async getOccupancy(rackId: number): Promise<RackOccupancyData | null> {
+    rackId = validate(RackIdSchema, rackId);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -465,6 +460,8 @@ export class RacksPrismaRepository extends RacksRepository {
   async getOccupancyAll(
     pagination: RackPagination = { page: 1, per_page: 50 },
   ): Promise<RackPage<RackOccupancyData>> {
+    pagination = validate(RackListQuerySchema, pagination);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -486,6 +483,8 @@ export class RacksPrismaRepository extends RacksRepository {
   }
 
   async getSpaces(rackId: number): Promise<RackSpaceOutput[] | null> {
+    rackId = validate(RackIdSchema, rackId);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -511,6 +510,12 @@ export class RacksPrismaRepository extends RacksRepository {
     unitNo: number,
     atom: RackSpaceAtom,
   ): Promise<RackSpaceResult> {
+    ({ rackId, unitNo, atom } = validate(RackSpaceParamsSchema, {
+      rackId,
+      unitNo,
+      atom,
+    }));
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -539,6 +544,11 @@ export class RacksPrismaRepository extends RacksRepository {
     rackId: number,
     objectId: number,
   ): Promise<RackSpaceOutput[] | null> {
+    ({ rackId, objectId } = validate(RackObjectSpacesParamsSchema, {
+      rackId,
+      objectId,
+    }));
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {

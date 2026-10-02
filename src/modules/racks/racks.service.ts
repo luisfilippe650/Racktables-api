@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { validate } from "../../shared/validation/validate.js";
 import {
   RackActorSchema,
   RackIdSchema,
@@ -33,15 +33,6 @@ import {
 } from "./errors/racks.errors.js";
 import { MAX_RACK_HEIGHT } from "./racks.constants.js";
 import type { RacksRepository } from "./repository/racks.repository.js";
-
-// Defines a schema that requires text and trims whitespace from the ends
-function validate<T extends z.ZodType>(schema: T, input: unknown): z.output<T> {
-  const result = schema.safeParse(input);
-  if (!result.success) {
-    throw new InvalidRackInputError(result.error.issues);
-  }
-  return result.data;
-}
 
 /** Any stored region makes the entire unit unavailable for a full-depth device. */
 function calculateOccupancy(data: RackOccupancyData): RackOccupancyOutput {
@@ -89,11 +80,11 @@ export class RacksService {
     input: RackInput,
     actor: string | null = null,
   ): Promise<RackOutput> {
-    const data = validate(RacksSchema, input);
+    const data = validate(RacksSchema, input, InvalidRackInputError);
 
     const result = await this.racksRepository.create(
       data,
-      validate(RackActorSchema, actor),
+      validate(RackActorSchema, actor, InvalidRackInputError),
     );
 
     switch (result.status) {
@@ -115,13 +106,13 @@ export class RacksService {
     input: Omit<RackUpdate, "id">,
     actor: string | null = null,
   ): Promise<RackOutput> {
-    id = validate(RackIdSchema, id);
+    id = validate(RackIdSchema, id, InvalidRackInputError);
 
-    const data = validate(UpdateRackSchema, input);
+    const data = validate(UpdateRackSchema, input, InvalidRackInputError);
 
     const result = await this.racksRepository.update(
       { id, ...data },
-      validate(RackActorSchema, actor),
+      validate(RackActorSchema, actor, InvalidRackInputError),
     );
 
     switch (result.status) {
@@ -135,7 +126,7 @@ export class RacksService {
   }
 
   async delete(id: number): Promise<void> {
-    id = validate(RackIdSchema, id);
+    id = validate(RackIdSchema, id, InvalidRackInputError);
 
     const result = await this.racksRepository.delete(id);
 
@@ -145,7 +136,7 @@ export class RacksService {
   }
 
   async get(id: number): Promise<RackOutput> {
-    id = validate(RackIdSchema, id);
+    id = validate(RackIdSchema, id, InvalidRackInputError);
 
     const rack = await this.racksRepository.get(id);
 
@@ -155,17 +146,21 @@ export class RacksService {
   }
 
   async getByName(name: string): Promise<RackOutput | null> {
-    return this.racksRepository.getByName(validate(RackNameSchema, name));
+    return this.racksRepository.getByName(
+      validate(RackNameSchema, name, InvalidRackInputError),
+    );
   }
 
   async getAll(
     query: Partial<RackPagination> = {},
   ): Promise<RackPage<RackOutput>> {
-    return this.racksRepository.getAll(validate(RackListQuerySchema, query));
+    return this.racksRepository.getAll(
+      validate(RackListQuerySchema, query, InvalidRackInputError),
+    );
   }
 
   async getDetails(rackId: number): Promise<RackDetailsOutput> {
-    rackId = validate(RackIdSchema, rackId);
+    rackId = validate(RackIdSchema, rackId, InvalidRackInputError);
 
     const details = await this.racksRepository.getDetails(rackId);
 
@@ -175,7 +170,7 @@ export class RacksService {
   }
 
   async getOccupancy(rackId: number): Promise<RackOccupancyOutput> {
-    rackId = validate(RackIdSchema, rackId);
+    rackId = validate(RackIdSchema, rackId, InvalidRackInputError);
 
     const data = await this.racksRepository.getOccupancy(rackId);
     if (data === null) throw new RackNotFoundError(rackId);
@@ -186,14 +181,14 @@ export class RacksService {
     query: Partial<RackPagination> = {},
   ): Promise<RackPage<RackOccupancyOutput>> {
     const data = await this.racksRepository.getOccupancyAll(
-      validate(RackListQuerySchema, query),
+      validate(RackListQuerySchema, query, InvalidRackInputError),
     );
 
     return { ...data, items: data.items.map(calculateOccupancy) };
   }
 
   async getSpaces(rackId: number): Promise<RackSpaceOutput[]> {
-    rackId = validate(RackIdSchema, rackId);
+    rackId = validate(RackIdSchema, rackId, InvalidRackInputError);
     const spaces = await this.racksRepository.getSpaces(rackId);
     if (spaces === null) throw new RackNotFoundError(rackId);
     return spaces;
@@ -204,7 +199,11 @@ export class RacksService {
     unitNo: number,
     atom: RackSpaceAtom,
   ): Promise<RackSpaceOutput | null> {
-    const params = validate(RackSpaceParamsSchema, { rackId, unitNo, atom });
+    const params = validate(
+      RackSpaceParamsSchema,
+      { rackId, unitNo, atom },
+      InvalidRackInputError,
+    );
 
     const result = await this.racksRepository.getSpace(
       params.rackId,
@@ -221,7 +220,11 @@ export class RacksService {
     rackId: number,
     objectId: number,
   ): Promise<RackSpaceOutput[]> {
-    const params = validate(RackObjectSpacesParamsSchema, { rackId, objectId });
+    const params = validate(
+      RackObjectSpacesParamsSchema,
+      { rackId, objectId },
+      InvalidRackInputError,
+    );
 
     const spaces = await this.racksRepository.getObjectSpaces(
       params.rackId,

@@ -13,6 +13,14 @@ export type LocationOutput = ObjectEntity;
 export type LocationDeleteResult =
   { status: "deleted" } | { status: "not_found" } | { status: "has_rows" };
 
+export type LocationCreateResult =
+  { status: "created"; location: LocationOutput } | { status: "name_conflict" };
+
+export type LocationUpdateResult =
+  | { status: "updated"; location: LocationOutput }
+  | { status: "not_found" }
+  | { status: "name_conflict" };
+
 /*
 Quando a API cria uma row, ela executa:
 

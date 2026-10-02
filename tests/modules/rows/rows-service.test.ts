@@ -27,7 +27,7 @@ test("RowService applies business rules before persistence", async () => {
     createWithLocation: async () => ({ status: "location_not_found" as const }),
     delete: async () => ({ status: "has_children" as const }),
     update: async () => ({ status: "not_found" as const }),
-    getById: async (id: number) => (id === 42 ? row : null),
+    get: async (id: number) => (id === 42 ? row : null),
     getByName: async () => row,
     getAll: async () => [],
   } as unknown as RowRepository;
@@ -46,7 +46,7 @@ test("RowService applies business rules before persistence", async () => {
     () => service.update(999, { name: "Row B" }),
     RowNotFoundError,
   );
-  await assert.rejects(() => service.getById(999), RowNotFoundError);
+  await assert.rejects(() => service.get(999), RowNotFoundError);
 });
 
 test("createWithLocation maps the atomic repository result without preliminary reads", async () => {
@@ -82,7 +82,7 @@ test("create maps the atomic name-conflict result without a preliminary read", a
 test("update maps the atomic not-found result without preliminary reads", async () => {
   const repository = {
     update: async () => ({ status: "not_found" as const }),
-    getById: async () => {
+    get: async () => {
       throw new Error("unexpected preliminary id lookup");
     },
     getByName: async () => {
@@ -100,7 +100,7 @@ test("update maps the atomic not-found result without preliminary reads", async 
 test("delete maps the atomic children result without preliminary reads", async () => {
   const repository = {
     delete: async () => ({ status: "has_children" as const }),
-    getById: async () => {
+    get: async () => {
       throw new Error("unexpected preliminary id lookup");
     },
   } as unknown as RowRepository;

@@ -5,7 +5,6 @@ import {
   UpdateLocationSchema,
 } from "./dto/locations.dto.js";
 import { ObjectIdParamsSchema } from "../../shared/schemas/object.schema.js";
-import * as repl from "node:repl";
 
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
@@ -18,7 +17,7 @@ export class LocationsController {
 
     if (!result.success) {
       return reply.status(400).send({
-        menssage: "Invalid request body.",
+        message: "Invalid request body.",
         errors: result.error.issues,
       });
     }
@@ -66,12 +65,12 @@ export class LocationsController {
       });
     }
 
-    const location = await this.locationsService.updateLocation({
-      id: paramsResult.data.id,
-      name: bodyResult.data.name,
-    });
+    const location = await this.locationsService.update(
+      paramsResult.data.id,
+      bodyResult.data,
+    );
 
-    return reply.status(201).send(location);
+    return reply.status(200).send(location);
   }
 
   async get(
@@ -87,7 +86,7 @@ export class LocationsController {
       });
     }
 
-    const data = await this.locationsService.getlocation(params.data.id);
+    const data = await this.locationsService.get(params.data.id);
 
     return reply.status(200).send(data);
   }
@@ -95,8 +94,8 @@ export class LocationsController {
   async getAll(
     request: FastifyRequest,
     reply: FastifyReply,
-  ): Promise<FastifyReply[]> {
-    const data = await this.locationsService.getAllLocations();
+  ): Promise<FastifyReply> {
+    const data = await this.locationsService.getAll();
 
     return reply.status(200).send(data);
   }

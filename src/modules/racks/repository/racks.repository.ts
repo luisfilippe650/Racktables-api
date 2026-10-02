@@ -15,10 +15,15 @@ import type {
 } from "../entity/racks.entity.js";
 
 export abstract class RacksRepository {
+  abstract create(
+    data: RackInput,
+    actor?: string | null,
+  ): Promise<RackCreateResult>;
 
-  abstract create(data: RackInput, actor?: string | null,): Promise<RackCreateResult>;
-
-  abstract update(data: RackUpdate, actor?: string | null,): Promise<RackUpdateResult>;
+  abstract update(
+    data: RackUpdate,
+    actor?: string | null,
+  ): Promise<RackUpdateResult>;
 
   abstract delete(id: number): Promise<RackDeleteResult>;
 
@@ -32,7 +37,9 @@ export abstract class RacksRepository {
 
   abstract getOccupancy(rackId: number): Promise<RackOccupancyData | null>;
 
-  abstract getOccupancyAll(pagination: RackPagination,): Promise<RackPage<RackOccupancyData>>;
+  abstract getOccupancyAll(
+    pagination: RackPagination,
+  ): Promise<RackPage<RackOccupancyData>>;
 
   /** Retorna as posições registradas; null se o rack não existir. */
   abstract getSpaces(rackId: number): Promise<RackSpaceOutput[] | null>;

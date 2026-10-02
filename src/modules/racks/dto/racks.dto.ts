@@ -35,6 +35,10 @@ export const RacksSchema = z
 
 export const UpdateRackSchema = z.object({ name: RackNameSchema }).strict();
 
+export const UpdateRackInputSchema = UpdateRackSchema.extend({
+  id: RackIdSchema,
+});
+
 export const RackIdParamsSchema = z.object({ id: RackIdSchema }).strict();
 
 export const RackNameQuerySchema = z.object({ name: RackNameSchema }).strict();

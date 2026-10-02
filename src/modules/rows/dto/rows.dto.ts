@@ -28,6 +28,10 @@ export const UpdateRowSchema = z
   })
   .strict();
 
+export const UpdateRowInputSchema = UpdateRowSchema.extend({
+  id: ObjectIdSchema,
+});
+
 export const RowLocationParamsSchema = z
   .object({
     rowId: ObjectIdSchema,

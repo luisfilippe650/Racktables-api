@@ -1,3 +1,12 @@
+import { validate } from "../../../shared/validation/validate.js";
+import { ObjectIdSchema } from "../../../shared/schemas/object.schema.js";
+import {
+  RowSchema,
+  RowNameSchema,
+  RowWithLocationSchema,
+  UpdateRowInputSchema,
+  RowLocationParamsSchema,
+} from "../dto/rows.dto.js";
 import { Prisma } from "../../../database/prisma.js";
 import { OBJECT_TYPES } from "../../../shared/object-types.js";
 import {
@@ -12,37 +21,12 @@ import {
   RowLinkToLocationResult,
   RowUnlinkFromLocationResult,
 } from "../entity/rows.entity.js";
-import { DatabaseOperationError } from "../errors/rows.errors.js";
+import {
+  executeDatabaseOperation,
+  waitBeforeRetry,
+  type RetryDelay,
+} from "../../../shared/database/execute-database-operation.js";
 import { RowRepository } from "./rows.repository.js";
-
-/* ----------------------------
-Esse código repete uma transação quando o Prisma retorna o erro `P2034`, que indica conflito ou deadlock:
-
- - Faz no máximo 3 tentativas.
-- Espera 25 ms antes da segunda e 50 ms antes da terceira.
-- `RetryDelay` permite substituir a espera real nos testes.
-- `isTransactionConflict()` verifica com segurança se o erro possui o código `P2034`.
-- Se continuar falhando após três tentativas, o repository lança `DatabaseOperationError`.
-
-*/
-
-const MAX_TRANSACTION_ATTEMPTS = 3;
-const INITIAL_TRANSACTION_RETRY_DELAY_MS = 25;
-
-type RetryDelay = (delayMs: number) => Promise<void>;
-
-const waitBeforeRetry: RetryDelay = (delayMs) =>
-  new Promise((resolve) => setTimeout(resolve, delayMs));
-
-function isTransactionConflict(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "P2034"
-  );
-}
-//----------------------
 
 export class RowPrismaRepository extends RowRepository {
   constructor(
@@ -52,33 +36,13 @@ export class RowPrismaRepository extends RowRepository {
     super();
   }
 
-  private async executeDatabaseOperation<T>(
-    operation: () => Promise<T>,
-  ): Promise<T> {
-    for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
-      try {
-        return await operation();
-      } catch (error) {
-        if (
-          isTransactionConflict(error) &&
-          attempt < MAX_TRANSACTION_ATTEMPTS
-        ) {
-          await this.retryDelay(
-            INITIAL_TRANSACTION_RETRY_DELAY_MS * 2 ** (attempt - 1),
-          );
-          continue;
-        }
-
-        throw new DatabaseOperationError(error);
-      }
-    }
-
-    throw new DatabaseOperationError(
-      new Error("Database operation exhausted all retry attempts."),
-    );
+  private executeDatabaseOperation<T>(operation: () => Promise<T>): Promise<T> {
+    return executeDatabaseOperation(operation, this.retryDelay);
   }
 
   async create(data: RowInput): Promise<RowCreateResult> {
+    data = validate(RowSchema, data);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -108,6 +72,8 @@ export class RowPrismaRepository extends RowRepository {
   async createWithLocation(
     data: RowWithLocationInput,
   ): Promise<RowCreateWithLocationResult> {
+    data = validate(RowWithLocationSchema, data);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -156,6 +122,8 @@ export class RowPrismaRepository extends RowRepository {
   }
 
   async delete(id: number): Promise<RowDeleteResult> {
+    id = validate(ObjectIdSchema, id);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -219,6 +187,8 @@ export class RowPrismaRepository extends RowRepository {
   }
 
   async update(data: RowUpdate): Promise<RowUpdateResult> {
+    data = validate(UpdateRowInputSchema, data);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -260,6 +230,11 @@ export class RowPrismaRepository extends RowRepository {
     rowId: number,
     locationId: number,
   ): Promise<RowLinkToLocationResult> {
+    ({ rowId, locationId } = validate(RowLocationParamsSchema, {
+      rowId,
+      locationId,
+    }));
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -325,6 +300,11 @@ export class RowPrismaRepository extends RowRepository {
     rowId: number,
     locationId: number,
   ): Promise<RowUnlinkFromLocationResult> {
+    ({ rowId, locationId } = validate(RowLocationParamsSchema, {
+      rowId,
+      locationId,
+    }));
+
     return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(
         async (tx) => {
@@ -389,6 +369,8 @@ export class RowPrismaRepository extends RowRepository {
   }
 
   async get(id: number): Promise<RowOutput | null> {
+    id = validate(ObjectIdSchema, id);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.object.findFirst({
         where: { id, objtype_id: OBJECT_TYPES.ROW },
@@ -397,6 +379,8 @@ export class RowPrismaRepository extends RowRepository {
   }
 
   async getByName(name: string): Promise<RowOutput | null> {
+    name = validate(RowNameSchema, name);
+
     return this.executeDatabaseOperation(() =>
       this.prisma.object.findFirst({
         where: { name, objtype_id: OBJECT_TYPES.ROW },

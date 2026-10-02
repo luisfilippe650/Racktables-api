@@ -1,3 +1,10 @@
+import { validate } from "../../../shared/validation/validate.js";
+import {
+  executeDatabaseOperation,
+  databaseErrorCode as errorCode,
+  waitBeforeRetry,
+  type RetryDelay,
+} from "../../../shared/database/execute-database-operation.js";
 import { Prisma } from "../../../database/prisma.js";
 import { Prisma as SQL } from "../../../generated/prisma/client.js";
 import type { Prisma as PrismaTypes } from "../../../generated/prisma/client.js";
@@ -42,10 +49,13 @@ import type {
 import {
   ObjectActorSchema,
   ObjectIdSchema,
+  ObjectNameSchema,
   toBooleanLike,
 } from "../dto/objects-common.dto.js";
 import {
   ObjectAllQuerySchema,
+  ObjectServiceTagQuerySchema,
+  ObjectSummaryQuerySchema,
   ObjectListQuerySchema,
 } from "../dto/objects-query.dto.js";
 import {
@@ -61,8 +71,6 @@ import { DatabaseOperationError } from "../errors/objects.errors.js";
 import { MAX_RACK_HEIGHT } from "../../racks/racks.constants.js";
 
 type Tx = PrismaTypes.TransactionClient;
-
-type RetryDelay = (ms: number) => Promise<void>;
 
 type AttributeMapRecord = PrismaTypes.AttributeMapGetPayload<{
   include: { Attribute: true };
@@ -93,12 +101,6 @@ const OBJECT_TYPE_CHAPTER_ID = 1;
 const UINT_MAX = 4_294_967_295;
 
 const spaceSelect = { rack_id: true, unit_no: true, atom: true } as const;
-
-function errorCode(error: unknown): string | undefined {
-  return typeof error === "object" && error !== null && "code" in error
-    ? String(error.code)
-    : undefined;
-}
 
 function cleanLabel(value: string): string {
   return value.replaceAll("%GPASS%", " ");
@@ -171,31 +173,20 @@ function positions(
 export class ObjectsPrismaRepository extends ObjectsRepository {
   constructor(
     private readonly prisma: typeof Prisma = Prisma,
-    private readonly retryDelay: RetryDelay = (ms) =>
-      new Promise((resolve) => setTimeout(resolve, ms)),
+    private readonly retryDelay: RetryDelay = waitBeforeRetry,
   ) {
     super();
   }
 
-  private async operation<T>(callback: () => Promise<T>): Promise<T> {
-    for (let attempt = 0; ; attempt++) {
-      try {
-        return await callback();
-      } catch (error) {
-        if (errorCode(error) === "P2034" && attempt < 2) {
-          await this.retryDelay(25 * 2 ** attempt);
-          continue;
-        }
-        throw new DatabaseOperationError(error);
-      }
-    }
+  private executeDatabaseOperation<T>(operation: () => Promise<T>): Promise<T> {
+    return executeDatabaseOperation(operation, this.retryDelay);
   }
 
   private transaction<T>(
     callback: (tx: Tx) => Promise<T>,
     write = false,
   ): Promise<T> {
-    return this.operation(() =>
+    return this.executeDatabaseOperation(() =>
       this.prisma.$transaction(callback, {
         isolationLevel: write ? "Serializable" : "RepeatableRead",
       }),
@@ -211,9 +202,9 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
       return { status: "type_not_allowed" };
     }
 
-    const input = ObjectsSchema.parse(data);
+    const input = validate(ObjectsSchema, data);
 
-    const user = ObjectActorSchema.parse(actor);
+    const user = validate(ObjectActorSchema, actor);
 
     try {
       return await this.transaction<ObjectCreateResult>(async (tx) => {
@@ -276,7 +267,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
         errorCode(error.cause) === "P2002"
       ) {
         // Only report an asset conflict if that key actually exists after rollback.
-        const conflict = await this.operation(() =>
+        const conflict = await this.executeDatabaseOperation(() =>
           this.prisma.object.findUnique({
             where: { asset_no: input.asset_no! },
             select: { id: true },
@@ -289,8 +280,8 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
   }
 
   async get(id: number): Promise<ObjectOutput | null> {
-    const objectId = ObjectIdSchema.parse(id);
-    return this.operation(() =>
+    const objectId = validate(ObjectIdSchema, id);
+    return this.executeDatabaseOperation(() =>
       this.prisma.object.findFirst({
         where: { id: objectId, ...equipmentWhere },
       }),
@@ -300,7 +291,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
   private async lookup(
     where: PrismaTypes.ObjectWhereInput,
   ): Promise<ObjectLookupResult> {
-    return this.operation(async () => {
+    return this.executeDatabaseOperation(async () => {
       const objects = await this.prisma.object.findMany({
         where: { ...where, ...equipmentWhere },
         orderBy: { id: "asc" },
@@ -312,11 +303,14 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     });
   }
 
-  getByName(name: string): Promise<ObjectLookupResult> {
-    return this.lookup({ name: name.trim() });
+  async getByName(name: string): Promise<ObjectLookupResult> {
+    return this.lookup({ name: validate(ObjectNameSchema, name) });
   }
-  getByServiceTag(serviceTag: string): Promise<ObjectLookupResult> {
-    return this.lookup({ asset_no: serviceTag.trim() });
+  async getByServiceTag(serviceTag: string): Promise<ObjectLookupResult> {
+    const { service_tag } = validate(ObjectServiceTagQuerySchema, {
+      service_tag: serviceTag,
+    });
+    return this.lookup({ asset_no: service_tag });
   }
 
   private async allocations(
@@ -381,7 +375,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
   async getAll(
     pagination: ObjectPagination = DEFAULT_PAGINATION,
   ): Promise<ObjectPage<ObjectListOutput>> {
-    const page = ObjectListQuerySchema.parse(pagination);
+    const page = validate(ObjectListQuerySchema, pagination);
     return this.transaction(async (tx) => {
       const objects = await tx.object.findMany({
         where: equipmentWhere,
@@ -427,7 +421,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
   async getAllObjects(
     query: ObjectAllQuery = DEFAULT_PAGINATION,
   ): Promise<ObjectPage<ObjectAllOutput>> {
-    const { search, ...page } = ObjectAllQuerySchema.parse(query);
+    const { search, ...page } = validate(ObjectAllQuerySchema, query);
     // LOCATE treats %, _ and backslashes literally and searches numeric IDs too.
     const where = search
       ? SQL.sql`WHERE (
@@ -455,7 +449,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
   async getTypes(
     pagination: ObjectPagination = DEFAULT_PAGINATION,
   ): Promise<ObjectPage<ObjectTypeOutput>> {
-    const page = ObjectListQuerySchema.parse(pagination);
+    const page = validate(ObjectListQuerySchema, pagination);
     return this.transaction(async (tx) => {
       const where = {
         chapter_id: OBJECT_TYPE_CHAPTER_ID,
@@ -483,8 +477,8 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     chapterId: number,
     pagination: ObjectPagination = DEFAULT_PAGINATION,
   ): Promise<ObjectPage<DictionaryOption> | null> {
-    const chapter_id = ObjectIdSchema.parse(chapterId);
-    const page = ObjectListQuerySchema.parse(pagination);
+    const chapter_id = validate(ObjectIdSchema, chapterId);
+    const page = validate(ObjectListQuerySchema, pagination);
     return this.transaction(async (tx) => {
       const where = { chapter_id, dict_value: { not: null } };
       const total = await tx.dictionary.count({ where });
@@ -503,7 +497,10 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     id: number,
     includeOptions = false,
   ): Promise<ObjectSummaryOutput | null> {
-    const objectId = ObjectIdSchema.parse(id);
+    const objectId = validate(ObjectIdSchema, id);
+    const { include_options } = validate(ObjectSummaryQuerySchema, {
+      include_options: includeOptions,
+    });
     return this.transaction(async (tx) => {
       const object = await tx.object.findUnique({ where: { id: objectId } });
       if (!object) return null;
@@ -578,7 +575,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
         ),
       ];
       const options =
-        includeOptions && chapters.length
+        include_options && chapters.length
           ? await tx.dictionary.findMany({
               where: { chapter_id: { in: chapters } },
               orderBy: [{ dict_value: "asc" }, { dict_key: "asc" }],
@@ -599,7 +596,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
         else if (type === "dict")
           output = {
             value: value?.uint_value ?? null,
-            ...(includeOptions
+            ...(include_options
               ? {
                   available_options: dictionaryOptions(
                     options.filter(
@@ -693,8 +690,8 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     id: number,
     actor: string | null = null,
   ): Promise<ObjectDeleteResult> {
-    const objectId = ObjectIdSchema.parse(id);
-    const user = ObjectActorSchema.parse(actor);
+    const objectId = validate(ObjectIdSchema, id);
+    const user = validate(ObjectActorSchema, actor);
     return this.transaction<ObjectDeleteResult>(async (tx) => {
       const object = await tx.object.findUnique({ where: { id: objectId } });
       if (!object) return { status: "not_found" };
@@ -884,8 +881,8 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     data: ObjectUpdate,
     actor: string | null = null,
   ): Promise<ObjectUpdateResult> {
-    const id = ObjectIdSchema.parse(data.id);
-    const user = ObjectActorSchema.parse(actor);
+    const id = validate(ObjectIdSchema, data.id);
+    const user = validate(ObjectActorSchema, actor);
     const parsed = UpdateObjectAttributesSchema.safeParse(data.updates);
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
@@ -995,7 +992,7 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
         error instanceof DatabaseOperationError &&
         errorCode(error.cause) === "P2002"
       ) {
-        const conflict = await this.operation(() =>
+        const conflict = await this.executeDatabaseOperation(() =>
           this.prisma.object.findFirst({
             where: { asset_no: String(updates.asset_no), id: { not: id } },
             select: { id: true },
@@ -1090,8 +1087,8 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     data: ObjectMountInput,
     actor: string | null = null,
   ): Promise<ObjectMountResult> {
-    const input = MountObjectSchema.parse(data);
-    const user = ObjectActorSchema.parse(actor);
+    const input = validate(MountObjectSchema, data);
+    const user = validate(ObjectActorSchema, actor);
     return this.transaction<ObjectMountResult>(async (tx) => {
       const object = await tx.object.findUnique({
         where: { id: input.object_id },
@@ -1136,8 +1133,8 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     id: number,
     actor: string | null = null,
   ): Promise<ObjectUnmountResult> {
-    const objectId = ObjectIdSchema.parse(id);
-    const user = ObjectActorSchema.parse(actor);
+    const objectId = validate(ObjectIdSchema, id);
+    const user = validate(ObjectActorSchema, actor);
     return this.transaction<ObjectUnmountResult>(async (tx) => {
       const object = await tx.object.findUnique({ where: { id: objectId } });
       if (!object) return { status: "object_not_found" };
@@ -1180,8 +1177,8 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     data: ObjectMoveInput,
     actor: string | null = null,
   ): Promise<ObjectMoveResult> {
-    const input = MoveObjectSchema.parse(data);
-    const user = ObjectActorSchema.parse(actor);
+    const input = validate(MoveObjectSchema, data);
+    const user = validate(ObjectActorSchema, actor);
     return this.transaction<ObjectMoveResult>(async (tx) => {
       const object = await tx.object.findUnique({
         where: { id: input.object_id },

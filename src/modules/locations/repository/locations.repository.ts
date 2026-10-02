@@ -1,20 +1,16 @@
-import {
+import type {
+  LocationCreateResult,
   LocationDeleteResult,
   LocationInput,
   LocationOutput,
   LocationUpdateInput,
+  LocationUpdateResult,
 } from "../entity/locations.entity.js";
 
 export abstract class LocationsRepository {
-  abstract create(data: LocationInput): Promise<LocationOutput | null>;
-
+  abstract create(data: LocationInput): Promise<LocationCreateResult>;
+  abstract update(data: LocationUpdateInput): Promise<LocationUpdateResult>;
   abstract delete(id: number): Promise<LocationDeleteResult>;
-
-  abstract updateLocation(
-    data: LocationUpdateInput,
-  ): Promise<LocationOutput | null>;
-
-  abstract getLocation(id: number): Promise<LocationOutput | null>;
-
-  abstract getAllLocations(): Promise<LocationOutput[] | null>;
+  abstract get(id: number): Promise<LocationOutput | null>;
+  abstract getAll(): Promise<LocationOutput[]>;
 }

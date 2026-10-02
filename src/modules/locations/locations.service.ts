@@ -1,67 +1,63 @@
-import { LocationsRepository } from "./repository/locations.repository.js";
-import { CreateLocationDTO, IDLocationDTO } from "./dto/locations.dto.js";
-
+import { validate } from "../../shared/validation/validate.js";
+import type { LocationsRepository } from "./repository/locations.repository.js";
 import {
-  LocationOutput,
-  LocationUpdateInput,
-} from "./entity/locations.entity.js";
+  CreateLocationSchema,
+  IDLocationSchema,
+  UpdateLocationSchema,
+  type CreateLocationDTO,
+  type IDLocationDTO,
+  type UpdateLocationDTO,
+} from "./dto/locations.dto.js";
+import type { LocationOutput } from "./entity/locations.entity.js";
 import {
   LocationHasRowsError,
   LocationNotFoundError,
+  LocationNameConflictError,
 } from "./errors/locations.errors.js";
 
 export class LocationsService {
   constructor(private readonly locationRepository: LocationsRepository) {}
 
-  async create(data: CreateLocationDTO): Promise<LocationOutput | null> {
-    const location = await this.locationRepository.create(data);
+  async create(input: CreateLocationDTO): Promise<LocationOutput> {
+    const data = validate(CreateLocationSchema, input);
+    const result = await this.locationRepository.create(data);
+    if (result.status === "name_conflict")
+      throw new LocationNameConflictError(data.name);
+    return result.location;
+  }
 
-    if (location == null) {
-      throw new Error("It was not possible to create the location.");
+  async update(
+    id: IDLocationDTO,
+    input: UpdateLocationDTO,
+  ): Promise<LocationOutput> {
+    id = validate(IDLocationSchema, id);
+    const data = validate(UpdateLocationSchema, input);
+    const result = await this.locationRepository.update({ id, ...data });
+    switch (result.status) {
+      case "updated":
+        return result.location;
+      case "not_found":
+        throw new LocationNotFoundError(id);
+      case "name_conflict":
+        throw new LocationNameConflictError(data.name);
     }
-
-    return location;
   }
 
   async delete(id: IDLocationDTO): Promise<void> {
+    id = validate(IDLocationSchema, id);
     const result = await this.locationRepository.delete(id);
-
-    if (result.status === "not_found") {
-      throw new LocationNotFoundError(id);
-    }
-
-    if (result.status === "has_rows") {
-      throw new LocationHasRowsError(id);
-    }
+    if (result.status === "not_found") throw new LocationNotFoundError(id);
+    if (result.status === "has_rows") throw new LocationHasRowsError(id);
   }
 
-  async updateLocation(data: LocationUpdateInput): Promise<LocationOutput> {
-    const location = await this.locationRepository.updateLocation(data);
-
-    if (location == null) {
-      throw new Error("It was not possible to update the location.");
-    }
-
+  async get(id: IDLocationDTO): Promise<LocationOutput> {
+    id = validate(IDLocationSchema, id);
+    const location = await this.locationRepository.get(id);
+    if (location === null) throw new LocationNotFoundError(id);
     return location;
   }
 
-  async getlocation(id: IDLocationDTO): Promise<LocationOutput> {
-    const location = await this.locationRepository.getLocation(id);
-
-    if (location == null) {
-      throw new Error("It was not possible to found the location.");
-    }
-
-    return location;
-  }
-
-  async getAllLocations(): Promise<LocationOutput[]> {
-    const locations = await this.getAllLocations();
-
-    if (locations == null) {
-      throw new Error("It was not possible to found the locations.");
-    }
-
-    return locations;
+  async getAll(): Promise<LocationOutput[]> {
+    return this.locationRepository.getAll();
   }
 }

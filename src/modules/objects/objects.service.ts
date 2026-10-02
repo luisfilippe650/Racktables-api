@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { validate } from "../../shared/validation/validate.js";
 import {
   ObjectActorSchema,
   type ObjectActorDTO,
@@ -82,16 +82,6 @@ export type ObjectUpdateOutput = Omit<
   "status"
 >;
 
-/**
- * Validates the input and returns normalized data with the schema's inferred output type.
- * Converts Zod failures into InvalidObjectInputError, preserving validation details.
- */
-function validate<T extends z.ZodType>(schema: T, input: unknown): z.output<T> {
-  const parsed = schema.safeParse(input);
-  if (!parsed.success) throw new InvalidObjectInputError(parsed.error.issues);
-  return parsed.data;
-}
-
 function lookup(
   result: ObjectLookupResult,
   field: "name" | "service_tag",
@@ -150,11 +140,11 @@ export class ObjectsService {
     input: ObjectDTO,
     actor: ObjectActorDTO = null,
   ): Promise<ObjectCreateOutput> {
-    const data = validate(ObjectsSchema, input);
+    const data = validate(ObjectsSchema, input, InvalidObjectInputError);
 
     const result = await this.objectsRepository.create(
       data,
-      validate(ObjectActorSchema, actor),
+      validate(ObjectActorSchema, actor, InvalidObjectInputError),
     );
 
     switch (result.status) {
@@ -176,13 +166,17 @@ export class ObjectsService {
     input: UpdateObjectAttributesDTO,
     actor: ObjectActorDTO = null,
   ): Promise<ObjectUpdateOutput> {
-    id = validate(ObjectIdSchema, id);
+    id = validate(ObjectIdSchema, id, InvalidObjectInputError);
 
-    const updates = validate(UpdateObjectAttributesSchema, input);
+    const updates = validate(
+      UpdateObjectAttributesSchema,
+      input,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsRepository.update(
       { id, updates },
-      validate(ObjectActorSchema, actor),
+      validate(ObjectActorSchema, actor, InvalidObjectInputError),
     );
 
     switch (result.status) {
@@ -210,10 +204,10 @@ export class ObjectsService {
   }
 
   async delete(id: ObjectIdDTO, actor: ObjectActorDTO = null): Promise<void> {
-    id = validate(ObjectIdSchema, id);
+    id = validate(ObjectIdSchema, id, InvalidObjectInputError);
     const result = await this.objectsRepository.delete(
       id,
-      validate(ObjectActorSchema, actor),
+      validate(ObjectActorSchema, actor, InvalidObjectInputError),
     );
     switch (result.status) {
       case "deleted":
@@ -232,23 +226,27 @@ export class ObjectsService {
   }
 
   async get(id: ObjectIdDTO): Promise<ObjectOutput> {
-    id = validate(ObjectIdSchema, id);
+    id = validate(ObjectIdSchema, id, InvalidObjectInputError);
     const object = await this.objectsRepository.get(id);
     if (object === null) throw new ObjectNotFoundError(id);
     return object;
   }
 
   async getByName(name: ObjectNameDTO): Promise<ObjectOutput> {
-    name = validate(ObjectNameSchema, name);
+    name = validate(ObjectNameSchema, name, InvalidObjectInputError);
     return lookup(await this.objectsRepository.getByName(name), "name", name);
   }
 
   async getByServiceTag(
     serviceTag: ObjectServiceTagQueryDTO["service_tag"],
   ): Promise<ObjectOutput> {
-    const { service_tag } = validate(ObjectServiceTagQuerySchema, {
-      service_tag: serviceTag,
-    });
+    const { service_tag } = validate(
+      ObjectServiceTagQuerySchema,
+      {
+        service_tag: serviceTag,
+      },
+      InvalidObjectInputError,
+    );
     return lookup(
       await this.objectsRepository.getByServiceTag(service_tag),
       "service_tag",
@@ -260,7 +258,7 @@ export class ObjectsService {
     query: ObjectListQueryDTO = {},
   ): Promise<ObjectPage<ObjectListOutput>> {
     return this.objectsRepository.getAll(
-      validate(ObjectListQuerySchema, query),
+      validate(ObjectListQuerySchema, query, InvalidObjectInputError),
     );
   }
 
@@ -268,7 +266,7 @@ export class ObjectsService {
     query: ObjectAllQueryDTO = {},
   ): Promise<ObjectPage<ObjectAllOutput>> {
     return this.objectsRepository.getAllObjects(
-      validate(ObjectAllQuerySchema, query),
+      validate(ObjectAllQuerySchema, query, InvalidObjectInputError),
     );
   }
 
@@ -276,7 +274,7 @@ export class ObjectsService {
     query: ObjectListQueryDTO = {},
   ): Promise<ObjectPage<ObjectTypeOutput>> {
     return this.objectsRepository.getTypes(
-      validate(ObjectListQuerySchema, query),
+      validate(ObjectListQuerySchema, query, InvalidObjectInputError),
     );
   }
 
@@ -284,10 +282,14 @@ export class ObjectsService {
     id: ObjectIdDTO,
     includeOptions: ObjectSummaryQueryDTO["include_options"] = false,
   ): Promise<ObjectSummaryOutput> {
-    id = validate(ObjectIdSchema, id);
-    const { include_options } = validate(ObjectSummaryQuerySchema, {
-      include_options: includeOptions,
-    });
+    id = validate(ObjectIdSchema, id, InvalidObjectInputError);
+    const { include_options } = validate(
+      ObjectSummaryQuerySchema,
+      {
+        include_options: includeOptions,
+      },
+      InvalidObjectInputError,
+    );
     const summary = await this.objectsRepository.getSummary(
       id,
       include_options,
@@ -300,10 +302,10 @@ export class ObjectsService {
     chapterId: ObjectIdDTO,
     query: ObjectListQueryDTO = {},
   ): Promise<ObjectPage<DictionaryOption>> {
-    chapterId = validate(ObjectIdSchema, chapterId);
+    chapterId = validate(ObjectIdSchema, chapterId, InvalidObjectInputError);
     const options = await this.objectsRepository.getDictionaryOptions(
       chapterId,
-      validate(ObjectListQuerySchema, query),
+      validate(ObjectListQuerySchema, query, InvalidObjectInputError),
     );
     if (options === null) throw new DictionaryChapterNotFoundError(chapterId);
     return options;
@@ -313,10 +315,10 @@ export class ObjectsService {
     input: MountObjectDTO,
     actor: ObjectActorDTO = null,
   ): Promise<ObjectMountOutput> {
-    const data = validate(MountObjectSchema, input);
+    const data = validate(MountObjectSchema, input, InvalidObjectInputError);
     const result = await this.objectsRepository.mount(
       data,
-      validate(ObjectActorSchema, actor),
+      validate(ObjectActorSchema, actor, InvalidObjectInputError),
     );
     if (result.status === "mounted") return result.allocation;
     return placementFailure(result, {
@@ -331,10 +333,10 @@ export class ObjectsService {
     id: ObjectIdDTO,
     actor: ObjectActorDTO = null,
   ): Promise<ObjectUnmountOutput> {
-    id = validate(ObjectIdSchema, id);
+    id = validate(ObjectIdSchema, id, InvalidObjectInputError);
     const result = await this.objectsRepository.unmount(
       id,
-      validate(ObjectActorSchema, actor),
+      validate(ObjectActorSchema, actor, InvalidObjectInputError),
     );
     if (result.status === "unmounted") return result.allocation;
     return placementFailure(result, { objectId: id });
@@ -344,10 +346,10 @@ export class ObjectsService {
     input: MoveObjectDTO,
     actor: ObjectActorDTO = null,
   ): Promise<ObjectMoveOutput> {
-    const data = validate(MoveObjectSchema, input);
+    const data = validate(MoveObjectSchema, input, InvalidObjectInputError);
     const result = await this.objectsRepository.move(
       data,
-      validate(ObjectActorSchema, actor),
+      validate(ObjectActorSchema, actor, InvalidObjectInputError),
     );
     if (result.status === "moved") return result.allocation;
     return placementFailure(result, {

@@ -6,11 +6,14 @@ import type { ObjectsRepository } from "./repository/objects.repository.js";
 
 export type ObjectsRouterOptions = { repository?: ObjectsRepository };
 
-const controller = new ObjectsController(
-  new ObjectsService(new ObjectsPrismaRepository()),
-);
+export async function objectsRouter(
+  app: FastifyInstance,
+  options: ObjectsRouterOptions = {},
+): Promise<void> {
+  const controller = new ObjectsController(
+    new ObjectsService(options.repository ?? new ObjectsPrismaRepository()),
+  );
 
-export async function objectsRouter(app: FastifyInstance): Promise<void> {
   app.post("/object", (request, reply) => controller.create(request, reply));
 
   app.patch("/object/:id", (request, reply) =>

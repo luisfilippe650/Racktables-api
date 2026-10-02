@@ -195,7 +195,7 @@ test("database failures use a safe public error and preserve the cause", async (
   const repository = new RowPrismaRepository(prisma);
 
   await assert.rejects(
-    () => repository.getById(42),
+    () => repository.get(42),
     (error: unknown) => {
       assert.ok(error instanceof DatabaseOperationError);
       assert.equal(
