@@ -27,7 +27,7 @@ export function registerSwagger(
           "Developed at **INPE — Instituto Nacional de Pesquisas Espaciais (Brazil)**, the solution aims to simplify and standardize programmatic access to infrastructure inventory, enabling seamless integrations with other systems, applications, and automation tools.\n" +
           "\n" +
           "As an **open-source project**, the API can also be studied, adapted, and extended by the community to support different infrastructure management and integration needs.",
-        version: "1.0.0",
+        version: "1.5.0",
       },
     },
   });
