@@ -1,4 +1,5 @@
 import { swaggerInputs } from "./swagger-inputs.js";
+import { swaggerResponses } from "./swagger-responses.js";
 import type { FastifyInstance } from "fastify";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
@@ -12,6 +13,7 @@ export function registerSwagger(
       schema: {
         ...schema,
         ...swaggerInputs[`${String(route.method).toUpperCase()} ${url}`],
+        ...swaggerResponses(String(route.method).toUpperCase(), url),
       },
       url,
     }),

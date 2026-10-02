@@ -432,7 +432,12 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
     )`
       : SQL.empty;
     return this.transaction(async (tx) => {
-      const items = await tx.$queryRaw<ObjectAllOutput[]>(SQL.sql`
+      const rows = await tx.$queryRaw<
+        (Omit<ObjectAllOutput, "object_id" | "objtype_id"> & {
+          object_id: number | bigint;
+          objtype_id: number | bigint;
+        })[]
+      >(SQL.sql`
         SELECT obj.id AS object_id, obj.name AS object_name, obj.label AS object_label,
           obj.asset_no, obj.objtype_id, d.dict_value AS object_type, obj.has_problems, obj.comment
         FROM Object AS obj LEFT JOIN Dictionary AS d ON d.chapter_id = ${OBJECT_TYPE_CHAPTER_ID} AND d.dict_key = obj.objtype_id
@@ -442,6 +447,11 @@ export class ObjectsPrismaRepository extends ObjectsRepository {
         SELECT COUNT(*) AS total FROM Object AS obj
         LEFT JOIN Dictionary AS d ON d.chapter_id = ${OBJECT_TYPE_CHAPTER_ID} AND d.dict_key = obj.objtype_id ${where}
       `);
+      const items = rows.map((row) => ({
+        ...row,
+        object_id: Number(row.object_id),
+        objtype_id: Number(row.objtype_id),
+      }));
       return { ...page, total: Number(counts[0].total), items };
     });
   }
