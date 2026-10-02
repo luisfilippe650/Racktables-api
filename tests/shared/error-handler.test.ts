@@ -68,3 +68,51 @@ test("the global error handler hides unexpected error details", async () => {
 
   await app.close();
 });
+
+test("malformed JSON receives a parser error with status 400 rather than an internal error", async (t) => {
+  const app = buildApp();
+  t.after(() => app.close());
+  const response = await app.inject({
+    method: "POST",
+    url: "/object",
+    headers: { "content-type": "application/json" },
+    payload: "{",
+  });
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.json().code, "FST_ERR_CTP_INVALID_JSON_BODY");
+});
+
+test("unsupported content types and oversized bodies keep their Fastify statuses", async (t) => {
+  const app = buildApp({ bodyLimit: 64 });
+  t.after(() => app.close());
+  const unsupported = await app.inject({
+    method: "POST",
+    url: "/object",
+    headers: { "content-type": "application/xml" },
+    payload: "<object/>",
+  });
+  assert.equal(unsupported.statusCode, 415);
+  assert.equal(unsupported.json().code, "FST_ERR_CTP_INVALID_MEDIA_TYPE");
+  const oversized = await app.inject({
+    method: "POST",
+    url: "/object",
+    payload: { name: "a".repeat(100), objtype_id: 4 },
+  });
+  assert.equal(oversized.statusCode, 413);
+  assert.equal(oversized.json().code, "FST_ERR_CTP_BODY_TOO_LARGE");
+});
+
+test("unexpected application errors cannot expose secrets by attaching an HTTP status", async (t) => {
+  const app = buildApp();
+  t.after(() => app.close());
+  app.get("/untrusted-client-error", async () => {
+    throw Object.assign(new Error("password=secret"), {
+      statusCode: 400,
+      code: "UNTRUSTED_ERROR",
+    });
+  });
+  const response = await app.inject("/untrusted-client-error");
+  assert.equal(response.statusCode, 500);
+  assert.equal(response.json().code, "INTERNAL_SERVER_ERROR");
+  assert.equal(response.body.includes("secret"), false);
+});

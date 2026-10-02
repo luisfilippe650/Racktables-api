@@ -42,7 +42,7 @@ Dentro do container, `127.0.0.1` aponta para o próprio container. Para um banco
 - `prisma/`: schema, views e migrations.
 - `tests/`: testes existentes.
 
-O módulo registrado atualmente é o de racks. Locations e rows têm código em `src/modules`, mas ainda não estão registrados no servidor. As rotas antigas da versão Python não se aplicam à versão atual.
+Os módulos registrados atualmente são racks e objects. Locations e rows têm código em `src/modules`, mas ainda não estão registrados no servidor. As rotas antigas da versão Python não se aplicam à versão atual.
 
 ## Rotas disponíveis
 
@@ -58,6 +58,24 @@ O módulo registrado atualmente é o de racks. Locations e rows têm código em 
 | GET | `/rack/:id/spaces` |
 | GET | `/rack/:rackId/spaces/:unitNo/:atom` |
 | GET | `/rack/:rackId/objects/:objectId/spaces` |
+| POST | `/object` |
+| GET, PATCH, DELETE | `/object/:id` |
+| GET | `/object/by-name?name=...` |
+| GET | `/object/by-service-tag?service_tag=...` |
+| GET | `/objects` |
+| GET | `/objects/all?search=...` |
+| GET | `/objects/types` |
+| GET | `/object/:id/summary?include_options=false` |
+| GET | `/objects/dictionary/:chapter_id` |
+| POST | `/object/mount` |
+| DELETE | `/object/:id/mount` |
+| POST | `/object/move` |
+
+As listagens de objects e as opções de dicionário aceitam `page` (1–1000) e `per_page` (1–100), com padrões 1 e 50, e retornam `{ items, total, page, per_page }`. `/objects` lista equipamentos com sua alocação; `/objects/all` inclui racks, rows e locations.
+
+`POST /object` recebe `name`, `objtype_id` e, opcionalmente, `label`, `asset_no` e `comment`. Retorna 201 com `{ object, ports_created }`. `PATCH /object/:id` atualiza campos fixos e atributos dinâmicos por nome, retornando `{ object, fixed_fields_updated, dynamic_attributes_updated }`. Para limpar um atributo dinâmico, envie `{ "Nome do atributo": { "clear": true } }`. A exclusão retorna 204 e é bloqueada quando o objeto está montado, tem conexões físicas ou entidades filhas.
+
+`POST /object/mount` recebe `{ rack_id, object_id, start_unit, height }`; `start_unit` é a unidade mais alta e a alocação segue em direção à U1. `POST /object/move` recebe `{ object_id, destination_rack_id, start_unit }` e descobre a altura a partir da alocação atual. Montagem, desmontagem e movimentação retornam 200 com os detalhes da operação.
 
 O banco RackTables deve existir antes da execução. O build e a inicialização não aplicam migrations automaticamente.
 
