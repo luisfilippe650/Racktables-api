@@ -1,3 +1,3 @@
-# RackTables API
+# RackTables REST API
 
-A documentação atual em português está no [README principal](README.md).
+A documentação atual está no [README principal](README.md), em inglês, com instalação, configuração, execução, rotas e exemplos de uso da API TypeScript.
