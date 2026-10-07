@@ -3,7 +3,7 @@ import { LocationsService } from "./locations.service.js";
 import {
   CreateLocationSchema,
   UpdateLocationSchema,
-} from "./dto/locations.dto.js";
+} from "./schemas/locations.dto.js";
 import { ObjectIdParamsSchema } from "../../shared/schemas/object.schema.js";
 
 export class LocationsController {

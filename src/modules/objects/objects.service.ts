@@ -6,7 +6,7 @@ import {
   type ObjectNameDTO,
   ObjectIdSchema,
   ObjectNameSchema,
-} from "./dto/objects-common.dto.js";
+} from "./schemas/objects-common.dto.js";
 import {
   ObjectAllQuerySchema,
   type ObjectAllQueryDTO,
@@ -16,19 +16,19 @@ import {
   ObjectListQuerySchema,
   ObjectServiceTagQuerySchema,
   ObjectSummaryQuerySchema,
-} from "./dto/objects-query.dto.js";
+} from "./schemas/objects-query.dto.js";
 import {
   MountObjectSchema,
   type MountObjectDTO,
   type MoveObjectDTO,
   MoveObjectSchema,
-} from "./dto/objects-placement.dto.js";
+} from "./schemas/objects-placement.dto.js";
 import {
   ObjectsSchema,
   type ObjectDTO,
   type UpdateObjectAttributesDTO,
   UpdateObjectAttributesSchema,
-} from "./dto/objects.dto.js";
+} from "./schemas/objects.dto.js";
 import type {
   ObjectCreateResult,
   ObjectLookupResult,

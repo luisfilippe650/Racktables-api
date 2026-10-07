@@ -6,7 +6,7 @@ import {
   RowWithLocationSchema,
   UpdateRowInputSchema,
   RowLocationParamsSchema,
-} from "../dto/rows.dto.js";
+} from "../schemas/rows.dto.js";
 import { Prisma } from "../../../database/prisma.js";
 import { OBJECT_TYPES } from "../../../shared/object-types.js";
 import {

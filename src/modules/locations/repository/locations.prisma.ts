@@ -10,7 +10,7 @@ import {
   CreateLocationSchema,
   UpdateLocationInputSchema,
   IDLocationSchema,
-} from "../dto/locations.dto.js";
+} from "../schemas/locations.dto.js";
 import type {
   LocationInput,
   LocationUpdateInput,

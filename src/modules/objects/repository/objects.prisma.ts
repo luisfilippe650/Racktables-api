@@ -51,21 +51,21 @@ import {
   ObjectIdSchema,
   ObjectNameSchema,
   toBooleanLike,
-} from "../dto/objects-common.dto.js";
+} from "../schemas/objects-common.dto.js";
 import {
   ObjectAllQuerySchema,
   ObjectServiceTagQuerySchema,
   ObjectSummaryQuerySchema,
   ObjectListQuerySchema,
-} from "../dto/objects-query.dto.js";
+} from "../schemas/objects-query.dto.js";
 import {
   MountObjectSchema,
   MoveObjectSchema,
-} from "../dto/objects-placement.dto.js";
+} from "../schemas/objects-placement.dto.js";
 import {
   ObjectsSchema,
   UpdateObjectAttributesSchema,
-} from "../dto/objects.dto.js";
+} from "../schemas/objects.dto.js";
 import { ObjectsRepository } from "./objects.repository.js";
 import { DatabaseOperationError } from "../errors/objects.errors.js";
 import { MAX_RACK_HEIGHT } from "../../racks/racks.constants.js";

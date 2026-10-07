@@ -8,7 +8,7 @@ import {
   RacksSchema,
   RackSpaceParamsSchema,
   UpdateRackSchema,
-} from "./dto/racks.dto.js";
+} from "./schemas/racks.dto.js";
 import type {
   RackDetailsOutput,
   RackInput,

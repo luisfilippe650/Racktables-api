@@ -10,7 +10,7 @@ import {
   RowNameDTO,
   RowWithLocationDTO,
   UpdateRowDTO,
-} from "./dto/rows.dto.js";
+} from "./schemas/rows.dto.js";
 import { RowOutput } from "./entity/rows.entity.js";
 import {
   LocationNotFoundError,

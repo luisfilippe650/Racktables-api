@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import * as dto from "../../../src/modules/objects/dto/objects.dto.js";
-import * as queryDto from "../../../src/modules/objects/dto/objects-query.dto.js";
-import * as placementDto from "../../../src/modules/objects/dto/objects-placement.dto.js";
+import * as dto from "../../../src/modules/objects/schemas/objects.dto.js";
+import * as queryDto from "../../../src/modules/objects/schemas/objects-query.dto.js";
+import * as placementDto from "../../../src/modules/objects/schemas/objects-placement.dto.js";
 
 test("create normalizes text and rejects infrastructure types", () => {
   assert.deepEqual(

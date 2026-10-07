@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { RacksSchema } from "../../../src/modules/racks/dto/racks.dto.js";
+import { RacksSchema } from "../../../src/modules/racks/schemas/racks.dto.js";
 
 test("rack creation normalizes fields and supplies the default height", () => {
   assert.deepEqual(

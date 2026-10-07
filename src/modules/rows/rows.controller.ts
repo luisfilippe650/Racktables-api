@@ -1,11 +1,11 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { ObjectIdParamsSchema } from "../../shared/schemas/object.schema.js";
-import { RowNameQuerySchema } from "./dto/rows.dto.js";
+import { RowNameQuerySchema } from "./schemas/rows.dto.js";
 import {
   RowLocationParamsSchema,
   RowSchema,
   UpdateRowSchema,
-} from "./dto/rows.dto.js";
+} from "./schemas/rows.dto.js";
 import { RowService } from "./rows.service.js";
 
 export class RowsController {

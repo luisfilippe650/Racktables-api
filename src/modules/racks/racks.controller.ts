@@ -7,7 +7,7 @@ import {
   RackObjectSpacesParamsSchema,
   UpdateRackSchema,
   RackSpaceParamsSchema,
-} from "./dto/racks.dto.js";
+} from "./schemas/racks.dto.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 
 export class RacksController {
@@ -194,7 +194,11 @@ export class RacksController {
       });
     }
 
-    const data = await this.racksService.getSpace(params.data.rackId, params.data.unitNo, params.data.atom);
+    const data = await this.racksService.getSpace(
+      params.data.rackId,
+      params.data.unitNo,
+      params.data.atom,
+    );
     return reply.status(200).send(data);
   }
 
@@ -210,8 +214,10 @@ export class RacksController {
       });
     }
 
-    const data = await this.racksService.getObjectSpaces(params.data.rackId, params.data.objectId);
+    const data = await this.racksService.getObjectSpaces(
+      params.data.rackId,
+      params.data.objectId,
+    );
     return reply.status(200).send(data);
   }
-
 }

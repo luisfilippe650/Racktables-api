@@ -7,7 +7,7 @@ import {
   type CreateLocationDTO,
   type IDLocationDTO,
   type UpdateLocationDTO,
-} from "./dto/locations.dto.js";
+} from "./schemas/locations.dto.js";
 import type { LocationOutput } from "./entity/locations.entity.js";
 import {
   LocationHasRowsError,

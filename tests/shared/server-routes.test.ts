@@ -3,7 +3,7 @@ import test from "node:test";
 import { buildApp } from "../../src/server.js";
 
 test("server registers every module under the RackTables v1 prefix", async (t) => {
-  const app = buildApp();
+  const app = buildApp({}, { jwtSecret: "test-secret-at-least-32-characters-long" });
   t.after(() => app.close());
   await app.ready();
   const routes: Array<[string, string]> = [
@@ -58,8 +58,8 @@ test("server registers every module under the RackTables v1 prefix", async (t) =
       false,
       `Unprefixed route: ${path}`,
     );
+    const response = await app.inject({ method: method as "GET", url: `/v1/racktables${path.replace(/:[A-Za-z_]+/g, "1")}` });
+    assert.equal(response.statusCode, 401, `Token required: ${method} ${path}`);
   }
-  const docs = await app.inject("/v1/racktables/docs/json");
-  assert.equal(docs.statusCode, 200);
-  assert.equal(docs.json().info.title, "RackTables API");
+  assert.equal((await app.inject("/v1/racktables/docs/json")).statusCode, 200);
 });

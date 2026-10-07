@@ -10,6 +10,7 @@ export function registerSwagger(
   app.register(swagger, {
     transform: ({ schema, url, route }) => ({
       schema: {
+        security: [{ bearerAuth: [] }],
         ...schema,
         ...swaggerInputs[`${String(route.method).toUpperCase()} ${url}`],
       },
@@ -17,6 +18,17 @@ export function registerSwagger(
     }),
     openapi: {
       openapi: "3.0.3",
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+            description: "Faça login em POST /auth/login e cole somente access_token no botão Authorize. O Swagger envia automaticamente o header Authorization: Bearer <token> nas rotas protegidas.",
+          },
+        },
+      },
+      security: [{ bearerAuth: [] }],
       info: {
         title: "RackTables API",
         description:

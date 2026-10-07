@@ -8,7 +8,7 @@ import {
   RackListQuerySchema,
   RackSpaceParamsSchema,
   RackObjectSpacesParamsSchema,
-} from "../dto/racks.dto.js";
+} from "../schemas/racks.dto.js";
 import { Prisma } from "../../../database/prisma.js";
 import type { Prisma as PrismaTypes } from "../../../generated/prisma/client.js";
 import { OBJECT_TYPES } from "../../../shared/object-types.js";

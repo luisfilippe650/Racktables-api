@@ -1,30 +1,31 @@
 import { z } from "zod";
-import { CreateLocationSchema as CreateLocationSchema_locations } from "../modules/locations/dto/locations.dto.js";
-import { UpdateLocationSchema as UpdateLocationSchema_locations } from "../modules/locations/dto/locations.dto.js";
+import { LoginSchema, LoginResponseSchema, AuthUserSchema } from "../modules/auth/schemas/auth.dto.js";
+import { CreateLocationSchema as CreateLocationSchema_locations } from "../modules/locations/schemas/locations.dto.js";
+import { UpdateLocationSchema as UpdateLocationSchema_locations } from "../modules/locations/schemas/locations.dto.js";
 import { ObjectIdParamsSchema as ObjectIdParamsSchema_locations } from "../shared/schemas/object.schema.js";
 import { ObjectIdParamsSchema as ObjectIdParamsSchema_rows } from "../shared/schemas/object.schema.js";
-import { RowNameQuerySchema as RowNameQuerySchema_rows } from "../modules/rows/dto/rows.dto.js";
-import { RowLocationParamsSchema as RowLocationParamsSchema_rows } from "../modules/rows/dto/rows.dto.js";
-import { RowSchema as RowSchema_rows } from "../modules/rows/dto/rows.dto.js";
-import { UpdateRowSchema as UpdateRowSchema_rows } from "../modules/rows/dto/rows.dto.js";
-import { RacksSchema as RacksSchema_racks } from "../modules/racks/dto/racks.dto.js";
-import { RackIdParamsSchema as RackIdParamsSchema_racks } from "../modules/racks/dto/racks.dto.js";
-import { RackNameQuerySchema as RackNameQuerySchema_racks } from "../modules/racks/dto/racks.dto.js";
-import { RackListQuerySchema as RackListQuerySchema_racks } from "../modules/racks/dto/racks.dto.js";
-import { RackObjectSpacesParamsSchema as RackObjectSpacesParamsSchema_racks } from "../modules/racks/dto/racks.dto.js";
-import { UpdateRackSchema as UpdateRackSchema_racks } from "../modules/racks/dto/racks.dto.js";
-import { RackSpaceParamsSchema as RackSpaceParamsSchema_racks } from "../modules/racks/dto/racks.dto.js";
-import { DictionaryParamsSchema as DictionaryParamsSchema_objects } from "../modules/objects/dto/objects-query.dto.js";
-import { ObjectAllQuerySchema as ObjectAllQuerySchema_objects } from "../modules/objects/dto/objects-query.dto.js";
-import { ObjectIdParamsSchema as ObjectIdParamsSchema_objects } from "../modules/objects/dto/objects-query.dto.js";
-import { ObjectListQuerySchema as ObjectListQuerySchema_objects } from "../modules/objects/dto/objects-query.dto.js";
-import { ObjectNameQuerySchema as ObjectNameQuerySchema_objects } from "../modules/objects/dto/objects-query.dto.js";
-import { ObjectServiceTagQuerySchema as ObjectServiceTagQuerySchema_objects } from "../modules/objects/dto/objects-query.dto.js";
-import { ObjectSummaryQuerySchema as ObjectSummaryQuerySchema_objects } from "../modules/objects/dto/objects-query.dto.js";
-import { MountObjectSchema as MountObjectSchema_objects } from "../modules/objects/dto/objects-placement.dto.js";
-import { MoveObjectSchema as MoveObjectSchema_objects } from "../modules/objects/dto/objects-placement.dto.js";
-import { ObjectsSchema as ObjectsSchema_objects } from "../modules/objects/dto/objects.dto.js";
-import { UpdateObjectAttributesSchema as UpdateObjectAttributesSchema_objects } from "../modules/objects/dto/objects.dto.js";
+import { RowNameQuerySchema as RowNameQuerySchema_rows } from "../modules/rows/schemas/rows.dto.js";
+import { RowLocationParamsSchema as RowLocationParamsSchema_rows } from "../modules/rows/schemas/rows.dto.js";
+import { RowSchema as RowSchema_rows } from "../modules/rows/schemas/rows.dto.js";
+import { UpdateRowSchema as UpdateRowSchema_rows } from "../modules/rows/schemas/rows.dto.js";
+import { RacksSchema as RacksSchema_racks } from "../modules/racks/schemas/racks.dto.js";
+import { RackIdParamsSchema as RackIdParamsSchema_racks } from "../modules/racks/schemas/racks.dto.js";
+import { RackNameQuerySchema as RackNameQuerySchema_racks } from "../modules/racks/schemas/racks.dto.js";
+import { RackListQuerySchema as RackListQuerySchema_racks } from "../modules/racks/schemas/racks.dto.js";
+import { RackObjectSpacesParamsSchema as RackObjectSpacesParamsSchema_racks } from "../modules/racks/schemas/racks.dto.js";
+import { UpdateRackSchema as UpdateRackSchema_racks } from "../modules/racks/schemas/racks.dto.js";
+import { RackSpaceParamsSchema as RackSpaceParamsSchema_racks } from "../modules/racks/schemas/racks.dto.js";
+import { DictionaryParamsSchema as DictionaryParamsSchema_objects } from "../modules/objects/schemas/objects-query.dto.js";
+import { ObjectAllQuerySchema as ObjectAllQuerySchema_objects } from "../modules/objects/schemas/objects-query.dto.js";
+import { ObjectIdParamsSchema as ObjectIdParamsSchema_objects } from "../modules/objects/schemas/objects-query.dto.js";
+import { ObjectListQuerySchema as ObjectListQuerySchema_objects } from "../modules/objects/schemas/objects-query.dto.js";
+import { ObjectNameQuerySchema as ObjectNameQuerySchema_objects } from "../modules/objects/schemas/objects-query.dto.js";
+import { ObjectServiceTagQuerySchema as ObjectServiceTagQuerySchema_objects } from "../modules/objects/schemas/objects-query.dto.js";
+import { ObjectSummaryQuerySchema as ObjectSummaryQuerySchema_objects } from "../modules/objects/schemas/objects-query.dto.js";
+import { MountObjectSchema as MountObjectSchema_objects } from "../modules/objects/schemas/objects-placement.dto.js";
+import { MoveObjectSchema as MoveObjectSchema_objects } from "../modules/objects/schemas/objects-placement.dto.js";
+import { ObjectsSchema as ObjectsSchema_objects } from "../modules/objects/schemas/objects.dto.js";
+import { UpdateObjectAttributesSchema as UpdateObjectAttributesSchema_objects } from "../modules/objects/schemas/objects.dto.js";
 
 // Documentation uses input DTOs without changing controller validation.
 function documentSchema(schema: z.ZodType) {
@@ -44,6 +45,13 @@ function documentSchema(schema: z.ZodType) {
 }
 
 export const swaggerInputs: Record<string, Record<string, unknown>> = {
+  "POST /v1/racktables/auth/login": {
+    body: documentSchema(LoginSchema),
+    response: { 200: documentSchema(LoginResponseSchema) },
+  },
+  "GET /v1/racktables/auth/me": {
+    response: { 200: documentSchema(AuthUserSchema) },
+  },
   "POST /v1/racktables/location": {
     body: documentSchema(CreateLocationSchema_locations),
   },

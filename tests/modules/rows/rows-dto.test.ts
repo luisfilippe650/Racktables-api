@@ -6,7 +6,7 @@ import {
   RowLocationParamsSchema,
   RowWithLocationSchema,
   UpdateRowSchema,
-} from "../../../src/modules/rows/dto/rows.dto.js";
+} from "../../../src/modules/rows/schemas/rows.dto.js";
 
 test("RowSchema accepts only a row name", () => {
   assert.deepEqual(RowSchema.parse({ name: "Row A" }), { name: "Row A" });
