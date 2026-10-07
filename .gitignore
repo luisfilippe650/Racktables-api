@@ -4,6 +4,8 @@
 !.env.example
 /.agents/
 /.codex/
+/.aws/
+/skills-lock.json
 /.idea/
 /.vscode/
 
@@ -21,3 +23,26 @@
 *.pid
 .DS_Store
 Thumbs.db
+
+# Internal plans and specifications
+/docs/superpowers/
+/docs/superpower/
+
+# Python environments and caches
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+/.pytest_cache/
+/.mypy_cache/
+/.ruff_cache/
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+
+# Documentation tooling and generated site
+/.venv-docs/
+/site/
+/.cache/

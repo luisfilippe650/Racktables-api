@@ -1,5 +1,3 @@
-<div align="center">
-
 # RackTables REST API
 
 **Camada de integração para acesso programático ao banco de dados RackTables**
@@ -11,11 +9,11 @@
 [![MySQL](https://img.shields.io/badge/MySQL%20%2F%20MariaDB-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 
-</div>
-
 > API REST em TypeScript com Fastify e Prisma que permite consultar e modificar o inventário diretamente em um banco MySQL/MariaDB do RackTables.
 >
-> Documentação interativa: `http://localhost:8000/v1/racktables/docs`. Especificação OpenAPI: `http://localhost:8000/v1/racktables/docs/json`.
+> Guias em português com Zensical: <http://localhost:8001>, após executar `npm run docs:dev`.
+>
+> Documentação interativa com Swagger: <http://localhost:8000/v1/racktables/docs>, com a API em execução. Especificação OpenAPI: <http://localhost:8000/v1/racktables/docs/json>.
 
 ---
 
@@ -27,6 +25,7 @@
 - [Pré-requisitos](#pré-requisitos)
 - [Instalação e configuração](#instalação-e-configuração)
 - [Execução](#execução)
+- [Autenticação](#autenticação)
 - [Endpoints](#endpoints)
   - [Locations](#locations)
   - [Rows](#rows)
@@ -37,6 +36,7 @@
   - [Movimentação](#movimentação)
 - [Exemplos de uso](#exemplos-de-uso)
 - [Códigos HTTP](#códigos-http)
+- [Site de documentação](#site-de-documentação)
 
 ---
 
@@ -56,7 +56,9 @@ Os recursos disponíveis incluem locais físicos, filas de racks, racks, equipam
 | Prisma 7 | Acesso ao banco de dados |
 | MySQL / MariaDB | Banco de dados RackTables |
 | Zod | Validação de entradas |
-| Swagger UI / OpenAPI | Documentação dos endpoints |
+| Swagger UI / OpenAPI | Referência interativa e contrato dos endpoints |
+| Zensical | Site de documentação a partir de Markdown |
+| Python | Ambiente da ferramenta de documentação |
 | dotenv | Carregamento das variáveis de ambiente |
 | Docker | Empacotamento e execução em container |
 
@@ -71,20 +73,27 @@ Racktables-api/
 │   ├── plugins/                  # Swagger e schemas de entrada
 │   ├── shared/                   # Entidades, validação e erros comuns
 │   └── modules/
+│       ├── auth/
 │       ├── locations/
 │       ├── rows/
 │       ├── racks/
 │       └── objects/
 ├── prisma/                       # Schema, views e migrations
 ├── tests/                        # Testes existentes
-├── docs/                         # Documentação complementar
+├── docs/
+│   ├── site/                     # Páginas Markdown publicadas pelo Zensical
+│   │   └── architecture/         # Arquitetura dos racks
+│   └── superpowers/              # Planos e especificações internos
+├── .github/workflows/docs.yml    # Validação do site no GitHub Actions
+├── zensical.toml                 # Configuração e navegação da documentação
+├── requirements-docs.txt         # Dependências Python da documentação
 ├── .env.example                  # Modelo de configuração
 ├── Dockerfile
 ├── package.json
 └── tsconfig.json
 ```
 
-Cada módulo contém rotas, controller, service, repository, DTOs e definições de entidades e erros.
+Os módulos organizam rotas, controllers, services e repositories; os módulos de inventário também incluem DTOs e definições de entidades e erros.
 
 **Fluxo de uma requisição:**
 
@@ -100,6 +109,9 @@ Cliente HTTP → Router → Controller (validação)
 - Node.js 24 e npm para execução local.
 - Banco MySQL/MariaDB do RackTables existente e acessível.
 - Docker para execução em container (opcional).
+- Python 3.11 ou superior, com `pip` e `venv`, para editar ou gerar a documentação.
+
+Os comandos de instalação e os scripts npm de documentação abaixo usam os caminhos de Linux/macOS. A documentação pode ser gerada sem executar a API ou conectar ao banco.
 
 O build e a inicialização não aplicam migrations automaticamente. Esta API se conecta ao banco RackTables existente.
 
@@ -124,7 +136,10 @@ Edite o `.env` com os dados do seu banco:
 DATABASE_URL=mysql://rackuser:rackpass@127.0.0.1:3306/racktables
 HOST=0.0.0.0
 PORT=8000
+JWT_SECRET=SUBSTITUA_POR_UM_SEGREDO_ALEATORIO
 ```
+
+Gere `JWT_SECRET` com `openssl rand -hex 32` e substitua o valor de exemplo.
 
 Caracteres especiais no usuário e na senha devem ser codificados para URL. `HOST` e `PORT` definem o endereço de escuta; os padrões são `0.0.0.0` e `8000`.
 
@@ -139,13 +154,17 @@ O `.env` é ignorado pelo Git; o `.env.example` e o `package-lock.json` permanec
 
 ## Execução
 
-**Desenvolvimento, com recarga automática:**
+### API em desenvolvimento
 
 ```bash
 npm run dev
 ```
 
-**Verificação de tipos, compilação e execução:**
+A API inicia na porta definida em `PORT` (8000 por padrão). O Swagger é disponibilizado pelo mesmo processo. Para parar, pressione **Ctrl+C**.
+
+O Zensical inicia separadamente com `npm run docs:dev`; veja [Site de documentação](#site-de-documentação).
+
+### API compilada
 
 ```bash
 npm run typecheck
@@ -153,7 +172,7 @@ npm run build
 npm start
 ```
 
-**Docker:**
+### API em Docker
 
 ```bash
 docker build -t racktables-api .
@@ -165,6 +184,40 @@ A imagem gera o Prisma Client, compila o TypeScript e executa com dependências 
 Dentro do container, `127.0.0.1` aponta para o próprio container. Para um banco em outro container, use o nome do serviço na `DATABASE_URL` e conecte a API à mesma rede com `--network <rede>`. Para um banco no host Linux, adicione `--add-host=host.docker.internal:host-gateway` e use `host.docker.internal` na URL. Ajuste a porta do banco ao endereço escolhido.
 
 A API estará disponível em `http://localhost:8000`, com Swagger UI em `/v1/racktables/docs`.
+
+## Autenticação
+
+Configure `JWT_SECRET` no `.env` com um segredo aleatório de pelo menos 32 bytes.
+Gere um valor com `openssl rand -hex 32`. A API recusa iniciar sem esse segredo.
+
+Faça login usando as credenciais existentes do RackTables:
+
+```bash
+curl -X POST http://localhost:8000/v1/racktables/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"login":"admin","password":"sua-senha"}'
+```
+
+A resposta contém `access_token`, `token_type`, `expires_in` (3600 segundos)
+e `user` (ID e login). Senhas e hashes não são retornados.
+O hash SHA-1 existente é verificado por compatibilidade com o RackTables;
+esse fluxo não cria usuários nem altera senhas no banco.
+
+Envie o token em todas as requisições de dados, inclusive nos exemplos deste README:
+
+```bash
+curl http://localhost:8000/v1/racktables/auth/me \
+  -H 'Authorization: Bearer SEU_TOKEN'
+```
+
+O login e `/v1/racktables/docs` (incluindo seus arquivos e especificações)
+são públicos. Todas as rotas de dados exigem `Authorization: Bearer SEU_TOKEN`.
+No Swagger, faça login em `/auth/login`, copie `access_token` e informe
+o token no botão **Authorize** para testar as rotas protegidas.
+Credenciais incorretas e tokens ausentes, inválidos ou expirados retornam `401`.
+Todos os usuários autenticados acessam as rotas de dados; permissões do
+RackCode não são avaliadas por esta API. Para encerrar a sessão, descarte o
+token no cliente; ele continua válido até expirar.
 
 ## Endpoints
 
@@ -356,12 +409,19 @@ A origem e a altura são obtidas da alocação atual. `start_unit` indica a unid
 
 ## Exemplos de uso
 
+Primeiro, siga o [guia de autenticação](docs/site/autenticacao.md) e configure o token no terminal:
+
+```bash
+export TOKEN='COLE_AQUI_O_ACCESS_TOKEN'
+```
+
 Os IDs abaixo são ilustrativos. Substitua-os pelos IDs retornados pela sua instalação.
 
 **Criar um local:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/location \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Sala de Servidores A"}'
 ```
@@ -370,30 +430,36 @@ curl -X POST http://localhost:8000/v1/racktables/location \
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/row \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Fila 01"}'
 
-curl -X PATCH http://localhost:8000/v1/racktables/row/link/10/29
+curl -X PATCH http://localhost:8000/v1/racktables/row/link/10/29 \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Criar um rack e consultar sua ocupação:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/rack \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Rack A1","rack_height":42,"row_id":10,"asset_no":"PAT-001"}'
 
-curl http://localhost:8000/v1/racktables/rack/27/occupancy
+curl http://localhost:8000/v1/racktables/rack/27/occupancy \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Criar um servidor e montá-lo no rack:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/object \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"srv-prod-01","objtype_id":4,"label":"Servidor de produção"}'
 
 curl -X POST http://localhost:8000/v1/racktables/object/mount \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"rack_id":27,"object_id":31,"start_unit":10,"height":2}'
 ```
@@ -401,14 +467,17 @@ curl -X POST http://localhost:8000/v1/racktables/object/mount \
 **Listar equipamentos com paginação e consultar um resumo:**
 
 ```bash
-curl 'http://localhost:8000/v1/racktables/objects?page=1&per_page=50'
-curl 'http://localhost:8000/v1/racktables/object/31/summary?include_options=true'
+curl 'http://localhost:8000/v1/racktables/objects?page=1&per_page=50' \
+  -H "Authorization: Bearer $TOKEN"
+curl 'http://localhost:8000/v1/racktables/object/31/summary?include_options=true' \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Atualizar campos fixos e atributos dinâmicos:**
 
 ```bash
 curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"srv-prod-01-renamed","has_problems":false,"Serial":"SN987654"}'
 ```
@@ -417,6 +486,7 @@ curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
 
 ```bash
 curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"Serial":{"clear":true}}'
 ```
@@ -425,45 +495,13 @@ curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/object/move \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"object_id":31,"destination_rack_id":35,"start_unit":5}'
 
-curl -X DELETE http://localhost:8000/v1/racktables/object/31/mount
+curl -X DELETE http://localhost:8000/v1/racktables/object/31/mount \
+  -H "Authorization: Bearer $TOKEN"
 ```
-
-## Autenticação
-
-Configure `JWT_SECRET` no `.env` com um segredo aleatório de pelo menos 32 bytes.
-Gere um valor com `openssl rand -hex 32`. A API recusa iniciar sem esse segredo.
-
-Faça login usando as credenciais existentes do RackTables:
-
-```bash
-curl -X POST http://localhost:8000/v1/racktables/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"login":"admin","password":"sua-senha"}'
-```
-
-A resposta contém `access_token`, `token_type`, `expires_in` (3600 segundos)
-e `user` (ID e login). Senhas e hashes não são retornados.
-O hash SHA-1 existente é verificado por compatibilidade com o RackTables;
-esse fluxo não cria usuários nem altera senhas no banco.
-
-Envie o token em todas as requisições de dados, inclusive nos exemplos acima:
-
-```bash
-curl http://localhost:8000/v1/racktables/auth/me \
-  -H 'Authorization: Bearer SEU_TOKEN'
-```
-
-O login e `/v1/racktables/docs` (incluindo seus arquivos e especificações)
-são públicos. Todas as rotas de dados exigem `Authorization: Bearer SEU_TOKEN`.
-No Swagger, faça login em `/auth/login`, copie `access_token` e informe
-o token no botão **Authorize** para testar as rotas protegidas.
-Credenciais incorretas e tokens ausentes, inválidos ou expirados retornam `401`.
-Todos os usuários autenticados acessam as rotas de dados; permissões do
-RackCode não são avaliadas por esta API. Para encerrar a sessão, descarte o
-token no cliente; ele continua válido até expirar.
 
 ## Códigos HTTP
 
@@ -473,6 +511,7 @@ token no cliente; ele continua válido até expirar.
 | `201` | Created | Recurso criado |
 | `204` | No Content | Exclusão ou alteração de vínculo concluída, sem corpo |
 | `400` | Bad Request | Corpo, parâmetros, query ou atributos inválidos |
+| `401` | Unauthorized | Credenciais incorretas ou token ausente, inválido ou expirado |
 | `404` | Not Found | Recurso ou rota inexistente |
 | `409` | Conflict | Conflito de nome, ocupação ou dependências do recurso |
 | `413` | Payload Too Large | Corpo excede o limite do servidor |
@@ -481,8 +520,72 @@ token no cliente; ele continua válido até expirar.
 
 Os erros tratados pela aplicação normalmente incluem `code`, `message` e, quando disponíveis, `details`. Algumas validações nos controllers retornam `message` e `errors`.
 
----
+## Site de documentação
 
-<div align="center">
-Desenvolvida para gestão de inventário de infraestrutura no <strong>INPE — Instituto Nacional de Pesquisas Espaciais</strong>
-</div>
+O Zensical transforma o Markdown de `docs/site/` em um site de guias em português. A referência interativa dos endpoints continua disponível no Swagger da API.
+
+### Instalar o Zensical
+
+Execute na raiz do repositório, uma vez por ambiente:
+
+```bash
+python3 -m venv .venv-docs
+.venv-docs/bin/python -m pip install -r requirements-docs.txt
+```
+
+O ambiente `.venv-docs` mantém a ferramenta e suas dependências separadas. Os scripts npm usam esse ambiente diretamente; não é necessário ativá-lo. Python é usado para a documentação, enquanto a API é executada com Node.js.
+
+### Iniciar a prévia
+
+```bash
+npm run docs:dev
+```
+
+Abra <http://localhost:8001>. O Zensical permanece rodando nesse terminal e atualiza as páginas automaticamente quando você salva o Markdown. Para encerrar a prévia, pressione **Ctrl+C**.
+
+**A documentação inicia somente quando você executa `npm run docs:dev`.** Executar `npm run dev` ou `npm start` inicia a API e seu Swagger, sem iniciar o Zensical.
+
+Para usar os dois ao mesmo tempo, abra dois terminais na raiz do projeto:
+
+```bash
+# Terminal 1: API e Swagger na porta 8000
+npm run dev
+```
+
+```bash
+# Terminal 2: documentação Zensical na porta 8001
+npm run docs:dev
+```
+
+A API usa a porta 8000 por padrão, definida por `PORT` no `.env`. A documentação usa a porta 8001, definida por `dev_addr` no `zensical.toml`. Os dois processos podem executar ao mesmo tempo.
+
+### Comandos disponíveis
+
+| Comando | O que faz | Endereço ou saída |
+| --- | --- | --- |
+| `npm run dev` | Inicia a API em desenvolvimento com recarga automática | `http://localhost:8000` |
+| `npm run build` | Compila a API e encerra | `dist/` |
+| `npm start` | Inicia a API já compilada | `http://localhost:8000` |
+| `npm run docs:dev` | Inicia a prévia da documentação com atualização automática | `http://localhost:8001` |
+| `npm run docs:build` | Valida e gera o site estático, depois encerra | `site/` |
+
+### Gerar e publicar o site
+
+```bash
+npm run docs:build
+```
+
+Esse comando executa o build em modo estrito (`--strict`) e gera os arquivos em `site/`. Ele não inicia um servidor. A geração e a prévia dos guias não exigem a API ou o banco em execução; os testes de endpoints no Swagger exigem a API e acesso ao banco.
+
+O workflow em `.github/workflows/docs.yml` valida a documentação em alterações dos arquivos de documentação e disponibiliza o site como artefato. A publicação automática em uma hospedagem ainda precisa ser configurada. Para publicar, hospede o conteúdo de `site/` e defina o endereço público em `site_url` no `zensical.toml`.
+
+No Windows, instale usando `.venv-docs\Scripts\python.exe -m pip install -r requirements-docs.txt` após criar o ambiente com `python -m venv .venv-docs`. Execute `.venv-docs\Scripts\zensical.exe serve` para a prévia ou `.venv-docs\Scripts\zensical.exe build --strict` para gerar o site.
+
+### Editar as páginas
+
+- Edite os arquivos Markdown em [docs/site](docs/site/index.md).
+- Adicione novas páginas à navegação em `zensical.toml`.
+- Consulte o [guia de edição](docs/site/documentacao.md) e a [arquitetura dos racks](docs/site/architecture/racktables-racks.md).
+- Execute `npm run docs:build` para validar antes de compartilhar as alterações.
+
+O ambiente `.venv-docs/`, o cache e a saída `site/` são ignorados pelo Git e pelo build Docker. Planos internos em `docs/superpowers/` ficam fora das páginas publicadas.

@@ -1,0 +1,20 @@
+[project]
+site_name = "RackTables REST API"
+site_description = "Guias e referência da API de integração com o RackTables"
+repo_url = "https://github.com/luisfilippe650/Racktables-api"
+docs_dir = "docs/site"
+site_dir = "site"
+dev_addr = "127.0.0.1:8001"
+nav = [
+  { "Início" = "index.md" },
+  { "Instalação e execução" = "instalacao.md" },
+  { "Autenticação" = "autenticacao.md" },
+  { "Endpoints" = "endpoints.md" },
+  { "Exemplos de uso" = "exemplos.md" },
+  { "Erros e soluções" = "erros.md" },
+  { "Arquitetura dos racks" = "architecture/racktables-racks.md" },
+  { "Editar documentação" = "documentacao.md" },
+]
+
+[project.theme]
+language = "pt-BR"
