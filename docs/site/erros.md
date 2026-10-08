@@ -1,5 +1,7 @@
 # Códigos HTTP e solução de problemas
 
+**Português (Brasil)** | [English](en/errors.md)
+
 | Código | Significado | Uso |
 |---|---|---|
 | `200` | OK | Consulta, atualização, montagem, desmontagem ou movimentação concluída |

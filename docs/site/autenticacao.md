@@ -1,5 +1,7 @@
 # Autenticação
 
+**Português (Brasil)** | [English](en/authentication.md)
+
 Configure `JWT_SECRET` no `.env` com um segredo aleatório de pelo menos 32 bytes.
 Gere um valor com `openssl rand -hex 32`. A API recusa iniciar sem esse segredo.
 

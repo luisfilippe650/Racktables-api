@@ -1,5 +1,7 @@
 # Como racks são armazenados no RackTables
 
+**Português (Brasil)** | [English](../en/architecture/racktables-racks.md)
+
 Este texto descreve o schema Prisma deste projeto e o contrato atual do módulo de racks.
 
 ## Object é a tabela central

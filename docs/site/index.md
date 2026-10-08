@@ -1,5 +1,7 @@
 # RackTables REST API
 
+**Português (Brasil)** | [English](en/index.md)
+
 Camada de integração desenvolvida no INPE para consultar e modificar o inventário do RackTables por HTTP. A API usa TypeScript, Fastify e Prisma, com um banco MySQL/MariaDB existente.
 
 ## Comece aqui

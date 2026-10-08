@@ -1,37 +1,37 @@
-# Exemplos de uso
+# Usage examples
 
-**Português (Brasil)** | [English](en/examples.md)
+**English** | [Português (Brasil)](../exemplos.md)
 
-Primeiro, siga o [guia de autenticação](autenticacao.md) e configure o token no terminal:
+First, follow the [authentication guide](authentication.md) and set the token in your terminal:
 
 ```bash
-export TOKEN='COLE_AQUI_O_ACCESS_TOKEN'
+export TOKEN='PASTE_YOUR_ACCESS_TOKEN_HERE'
 ```
 
-Os IDs abaixo são ilustrativos. Substitua-os pelos IDs retornados pela sua instalação.
+The IDs below are examples. Replace them with IDs returned by your installation.
 
-**Criar um local:**
+**Create a location:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/location \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Sala de Servidores A"}'
+  -d '{"name":"Server Room A"}'
 ```
 
-**Criar uma fila e vinculá-la ao local:**
+**Create a row and link it to the location:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/row \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Fila 01"}'
+  -d '{"name":"Row 01"}'
 
 curl -X PATCH http://localhost:8000/v1/racktables/row/link/10/29 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-**Criar um rack e consultar sua ocupação:**
+**Create a rack and query its occupancy:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/rack \
@@ -43,13 +43,13 @@ curl http://localhost:8000/v1/racktables/rack/27/occupancy \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-**Criar um servidor e montá-lo no rack:**
+**Create a server and mount it in the rack:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/object \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"name":"srv-prod-01","objtype_id":4,"label":"Servidor de produção"}'
+  -d '{"name":"srv-prod-01","objtype_id":4,"label":"Production server"}'
 
 curl -X POST http://localhost:8000/v1/racktables/object/mount \
   -H "Authorization: Bearer $TOKEN" \
@@ -57,7 +57,7 @@ curl -X POST http://localhost:8000/v1/racktables/object/mount \
   -d '{"rack_id":27,"object_id":31,"start_unit":10,"height":2}'
 ```
 
-**Listar equipamentos com paginação e consultar um resumo:**
+**List equipment with pagination and query a summary:**
 
 ```bash
 curl 'http://localhost:8000/v1/racktables/objects?page=1&per_page=50' \
@@ -66,7 +66,7 @@ curl 'http://localhost:8000/v1/racktables/object/31/summary?include_options=true
   -H "Authorization: Bearer $TOKEN"
 ```
 
-**Atualizar campos fixos e atributos dinâmicos:**
+**Update fixed fields and dynamic attributes:**
 
 ```bash
 curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
@@ -75,7 +75,7 @@ curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
   -d '{"name":"srv-prod-01-renamed","has_problems":false,"Serial":"SN987654"}'
 ```
 
-**Limpar um atributo dinâmico:**
+**Clear a dynamic attribute:**
 
 ```bash
 curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
@@ -84,7 +84,7 @@ curl -X PATCH http://localhost:8000/v1/racktables/object/31 \
   -d '{"Serial":{"clear":true}}'
 ```
 
-**Mover o equipamento e desmontá-lo:**
+**Move and unmount equipment:**
 
 ```bash
 curl -X POST http://localhost:8000/v1/racktables/object/move \

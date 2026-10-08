@@ -1,5 +1,7 @@
 # Instalação e execução
 
+**Português (Brasil)** | [English](en/installation.md)
+
 ## Pré-requisitos
 
 - Node.js 24 e npm para execução local.

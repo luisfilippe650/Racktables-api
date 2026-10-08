@@ -1,5 +1,7 @@
 # Referência dos endpoints
 
+**Português (Brasil)** | [English](en/endpoints.md)
+
 Todas as rotas abaixo usam o prefixo **`/v1/racktables`**. Os parâmetros `{id}`, `{rowId}` e similares devem ser substituídos pelos IDs reais.
 
 As entradas de schema fixo rejeitam campos desconhecidos com **400**. A atualização de objetos aceita também nomes de atributos dinâmicos. As respostas de sucesso retornam os dados diretamente, sem envelope global `status`, `message` e `data`.

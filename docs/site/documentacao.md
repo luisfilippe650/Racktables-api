@@ -1,5 +1,7 @@
 # Editar e gerar a documentação
 
+**Português (Brasil)** | [English](en/documentation.md)
+
 O Zensical transforma os arquivos Markdown de `docs/site/` em um site estático. A ferramenta fica no ambiente `.venv-docs`, separado da API Node.js.
 
 ## Instalação
@@ -35,6 +37,8 @@ Abra <http://localhost:8001>. A porta 8001 permite executar a documentação jun
 | `zensical.toml` | Nome, idioma, navegação e porta da prévia |
 
 Os planos e especificações em `docs/superpowers/` permanecem no repositório e são excluídos do site.
+
+A versão em inglês fica em `docs/site/en/`, com as mesmas páginas da versão em português. Atualize os dois idiomas ao alterar o conteúdo. O menu em `zensical.toml` organiza as páginas por idioma.
 
 ## Escrever Markdown
 

@@ -6,15 +6,35 @@ docs_dir = "docs/site"
 site_dir = "site"
 dev_addr = "127.0.0.1:8001"
 nav = [
-  { "Início" = "index.md" },
-  { "Instalação e execução" = "instalacao.md" },
-  { "Autenticação" = "autenticacao.md" },
-  { "Endpoints" = "endpoints.md" },
-  { "Exemplos de uso" = "exemplos.md" },
-  { "Erros e soluções" = "erros.md" },
-  { "Arquitetura dos racks" = "architecture/racktables-racks.md" },
-  { "Editar documentação" = "documentacao.md" },
+  { "English" = [
+    { "Home" = "en/index.md" },
+    { "About the project" = "en/about.md" },
+    { "Installation and execution" = "en/installation.md" },
+    { "Authentication" = "en/authentication.md" },
+    { "Endpoints" = "en/endpoints.md" },
+    { "Usage examples" = "en/examples.md" },
+    { "Troubleshooting" = "en/errors.md" },
+    { "Rack architecture" = "en/architecture/racktables-racks.md" },
+    { "Editing documentation" = "en/documentation.md" },
+  ] },
+  { "Português" = [
+    { "Início" = "index.md" },
+    { "Sobre o projeto" = "sobre.md" },
+    { "Instalação e execução" = "instalacao.md" },
+    { "Autenticação" = "autenticacao.md" },
+    { "Endpoints" = "endpoints.md" },
+    { "Exemplos de uso" = "exemplos.md" },
+    { "Erros e soluções" = "erros.md" },
+    { "Arquitetura dos racks" = "architecture/racktables-racks.md" },
+    { "Editar documentação" = "documentacao.md" },
+  ] },
 ]
 
 [project.theme]
 language = "pt-BR"
+
+[project.extra]
+alternate = [
+  { name = "English", link = "/en/", lang = "en" },
+  { name = "Português", link = "/", lang = "pt" },
+]
