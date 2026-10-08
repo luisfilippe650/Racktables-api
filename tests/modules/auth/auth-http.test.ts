@@ -54,6 +54,11 @@ test("login verifies RackTables passwords and protects API routes", async (t) =>
       if (!["get", "post", "patch", "delete", "put", "head", "options"].includes(method)) continue;
       if (path === "/v1/racktables/auth/login" && method === "post") continue;
       assert.deepEqual(operation.security, [{ bearerAuth: [] }], `${method} ${path}`);
+      const unauthorized = operation.responses["401"]?.content["application/json"]?.schema;
+      assert.ok(unauthorized, `401 documented: ${method} ${path}`);
+      assert.equal(unauthorized.type, "object");
+      assert.deepEqual(unauthorized.required, ["message"]);
+      assert.equal(unauthorized.properties.message.type, "string");
     }
   }
   const login = paths["/v1/racktables/auth/login"].post;

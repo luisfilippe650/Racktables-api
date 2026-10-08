@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { z } from "zod";
+import { validate } from "../../shared/validation/validate.js";
 import {
   DictionaryParamsSchema,
   ObjectAllQuerySchema,
@@ -20,16 +20,6 @@ import {
 import { InvalidObjectInputError } from "./errors/objects.errors.js";
 import type { ObjectsService } from "./objects.service.js";
 
-/**
- * Validates the input and returns normalized data with the schema's inferred output type.
- * Converts Zod failures into InvalidObjectInputError, preserving validation details.
- */
-function validate<T extends z.ZodType>(schema: T, input: unknown): z.output<T> {
-  const parsed = schema.safeParse(input);
-  if (!parsed.success) throw new InvalidObjectInputError(parsed.error.issues);
-  return parsed.data;
-}
-
 export class ObjectsController {
   constructor(private readonly objectsService: ObjectsService) {}
 
@@ -37,7 +27,7 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const body = validate(ObjectsSchema, request.body);
+    const body = validate(ObjectsSchema, request.body, InvalidObjectInputError);
 
     const result = await this.objectsService.create(body);
 
@@ -48,9 +38,17 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const { id } = validate(ObjectIdParamsSchema, request.params);
+    const { id } = validate(
+      ObjectIdParamsSchema,
+      request.params,
+      InvalidObjectInputError,
+    );
 
-    const body = validate(UpdateObjectAttributesSchema, request.body);
+    const body = validate(
+      UpdateObjectAttributesSchema,
+      request.body,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.update(id, body);
 
@@ -61,7 +59,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const { id } = validate(ObjectIdParamsSchema, request.params);
+    const { id } = validate(
+      ObjectIdParamsSchema,
+      request.params,
+      InvalidObjectInputError,
+    );
 
     await this.objectsService.delete(id);
 
@@ -72,7 +74,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const { id } = validate(ObjectIdParamsSchema, request.params);
+    const { id } = validate(
+      ObjectIdParamsSchema,
+      request.params,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.get(id);
 
@@ -83,7 +89,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const { name } = validate(ObjectNameQuerySchema, request.query);
+    const { name } = validate(
+      ObjectNameQuerySchema,
+      request.query,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.getByName(name);
 
@@ -97,6 +107,7 @@ export class ObjectsController {
     const { service_tag } = validate(
       ObjectServiceTagQuerySchema,
       request.query,
+      InvalidObjectInputError,
     );
 
     const result = await this.objectsService.getByServiceTag(service_tag);
@@ -108,7 +119,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const query = validate(ObjectListQuerySchema, request.query);
+    const query = validate(
+      ObjectListQuerySchema,
+      request.query,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.getAll(query);
 
@@ -119,7 +134,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const query = validate(ObjectAllQuerySchema, request.query);
+    const query = validate(
+      ObjectAllQuerySchema,
+      request.query,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.getAllObjects(query);
 
@@ -130,7 +149,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const query = validate(ObjectListQuerySchema, request.query);
+    const query = validate(
+      ObjectListQuerySchema,
+      request.query,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.getTypes(query);
 
@@ -141,11 +164,16 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const { id } = validate(ObjectIdParamsSchema, request.params);
+    const { id } = validate(
+      ObjectIdParamsSchema,
+      request.params,
+      InvalidObjectInputError,
+    );
 
     const { include_options } = validate(
       ObjectSummaryQuerySchema,
       request.query,
+      InvalidObjectInputError,
     );
 
     const result = await this.objectsService.getSummary(id, include_options);
@@ -157,9 +185,17 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const { chapter_id } = validate(DictionaryParamsSchema, request.params);
+    const { chapter_id } = validate(
+      DictionaryParamsSchema,
+      request.params,
+      InvalidObjectInputError,
+    );
 
-    const query = validate(ObjectListQuerySchema, request.query);
+    const query = validate(
+      ObjectListQuerySchema,
+      request.query,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.getDictionaryOptions(
       chapter_id,
@@ -173,7 +209,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const body = validate(MountObjectSchema, request.body);
+    const body = validate(
+      MountObjectSchema,
+      request.body,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.mount(body);
 
@@ -184,7 +224,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const { id } = validate(ObjectIdParamsSchema, request.params);
+    const { id } = validate(
+      ObjectIdParamsSchema,
+      request.params,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.unmount(id);
 
@@ -195,7 +239,11 @@ export class ObjectsController {
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<FastifyReply> {
-    const body = validate(MoveObjectSchema, request.body);
+    const body = validate(
+      MoveObjectSchema,
+      request.body,
+      InvalidObjectInputError,
+    );
 
     const result = await this.objectsService.move(body);
 

@@ -1,4 +1,5 @@
 import { swaggerInputs } from "./swagger-inputs.js";
+import { swaggerResponses } from "./swagger-responses.js";
 import type { FastifyInstance } from "fastify";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
@@ -8,14 +9,26 @@ export function registerSwagger(
   routePrefix = "/docs",
 ): void {
   app.register(swagger, {
-    transform: ({ schema, url, route }) => ({
-      schema: {
+    transform: ({ schema, url, route }) => {
+      const documentedSchema = {
         security: [{ bearerAuth: [] }],
         ...schema,
+        ...swaggerResponses(String(route.method).toUpperCase(), url),
         ...swaggerInputs[`${String(route.method).toUpperCase()} ${url}`],
-      },
-      url,
-    }),
+      };
+      if (documentedSchema.security.some((requirement) => "bearerAuth" in requirement)) {
+        documentedSchema.response = {
+          ...(documentedSchema.response as Record<string, unknown> | undefined),
+          401: {
+            description: "Token ausente, inválido ou expirado.",
+            type: "object",
+            required: ["message"],
+            properties: { message: { type: "string" } },
+          },
+        };
+      }
+      return { schema: documentedSchema, url };
+    },
     openapi: {
       openapi: "3.0.3",
       components: {
